@@ -1,0 +1,21 @@
+{
+  "name": "blend",
+  "version": "0.3.0",
+  "description": "An Elevated Billing electron based application for taking spreadsheets from google drive and blending them together for better use.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tim Collinson",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "async": "^2.0.0-rc.2",
+    "fs-extra": "^0.26.7",
+    "glob": "^7.0.3",
+    "googleapis": "^4.0.0",
+    "moment": "^2.12.0",
+    "open": "0.0.5",
+    "request": "^2.69.0",
+    "xlsx-style": "^0.8.7"
+  }
+}
