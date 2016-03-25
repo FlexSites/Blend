@@ -17,5 +17,14 @@
     "open": "0.0.5",
     "request": "^2.69.0",
     "xlsx-style": "^0.8.7"
-  }
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://bitbucket.org/elevatedbilling/blend.git"
+  },
+  "homepage": "https://bitbucket.org/elevatedbilling/blend#readme"
 }
