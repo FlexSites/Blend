@@ -1,3 +1,5 @@
+"use strict";
+
 var app = require('app')
 var BrowserWindow = require('browser-window')
 var Menu = require('menu')

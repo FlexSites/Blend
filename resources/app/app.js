@@ -1,3 +1,5 @@
+"use strict";
+
 String.prototype.toTitleCase = function(){
     var str = this.replace(/\b[\w]+\b/g, function(txt){
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -142,7 +144,7 @@ async.waterfall([
             res.on('end', function(){
                 var json = JSON.parse(data)
                 if (json && json.items){
-                    files = json.items
+                    var files = json.items
 
                     setTimeout(function(){
                         next(null, files)
@@ -846,7 +848,7 @@ var wscols = [ {wch:10}, {wch:12}, {wch:20}, {wch:20}, {wch:10}, {wch:12}, {wch:
 
 
 // excel workbook class
-Workbook = function(){
+var Workbook = function(){
     if(!(this instanceof Workbook)) return new Workbook()
 
     this.SheetNames = []
@@ -854,7 +856,7 @@ Workbook = function(){
 }
 
 // create sheet from array
-sheetFromArray = function(data){
+var sheetFromArray = function(data){
     var _worksheet = {};
     var range = { s: { c: 1000000, r: 1000000 }, e: { c: 0, r: 0 }};
     // var colCount = data[0].length;
@@ -929,7 +931,7 @@ sheetFromArray = function(data){
 
 var prevBegin, prevEnd
 
-getRange = function(dates){
+var getRange = function(dates){
 
     var _dates = dates
                     // remove all whitespace
@@ -1135,7 +1137,7 @@ getRange = function(dates){
 // }
 
 // return unique array
-uniqueArray = function(a) {
+var uniqueArray = function(a) {
     var uniq = a.filter(function(item, pos) {
         return a.indexOf(item) == pos
     })
@@ -1144,7 +1146,7 @@ uniqueArray = function(a) {
 }
 
 // get column header names
-getColumnNames = function(sheet){
+var getColumnNames = function(sheet){
 
     var range = xlsx.utils.decode_range(sheet[ '!ref' ])
     var columns = []
@@ -1176,14 +1178,14 @@ getColumnNames = function(sheet){
 }
 
 // convert currency to number
-currencyNumber = function(amount) {
+var currencyNumber = function(amount) {
     var f = null
     if(amount) f = parseFloat( amount.replace(/[^0-9\.-]+/g,"") )
     return f
 }
 
 // get color of row, use column F as reference
-getRowColor = function(sheet, row){
+var getRowColor = function(sheet, row){
     var cell = 'F' + row
 
     if (sheet[cell] && sheet[cell].s){
@@ -1205,13 +1207,13 @@ getRowColor = function(sheet, row){
     return 'FFFFFF'
 }
 
-resetProgress = function(){
+var resetProgress = function(){
     // turn off progress bar transitions, reset to 0, restore transitions
     $('.progress-bar').addClass('notransition')
     updateProgress(0)
     $('.progress-bar').remove('notransition')
 }
 
-updateProgress = function(val){
+var updateProgress = function(val){
      $('.progress-bar').css('width', val + '%').attr('aria-valuenow', val)
 }
