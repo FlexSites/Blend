@@ -3,7 +3,6 @@
 var app = require('app')
 var BrowserWindow = require('browser-window')
 var Menu = require('menu')
-require('crash-reporter').start()
 
 var mainWindow = null
 
@@ -111,7 +110,7 @@ var template = [
         'accept-first-mouse': true,
         show: false})
             
-    mainWindow.loadUrl('file://' + __dirname + '/index.html')
+    mainWindow.loadURL('file://' + __dirname + '/index.html')
 
     mainWindow.show()
 
