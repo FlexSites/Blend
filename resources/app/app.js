@@ -119,15 +119,17 @@ async.waterfall([
         }, function(err, response, body){
             if (err) console.log(err)
         })
-        var _progress = 0
+        
+        
         req.on('response', function(res){
-            var len = parseInt(res.headers['content-length'], 10)
+            var avgChunks = 250;
+            var numChunks = 0;
             var data = ""
 
             res.on('data', function(chunk){
                 data += chunk
-                _progress += chunk.length
-                var percent = parseInt(_progress * 100 / len)
+                numChunks += 1
+                var percent = parseInt(numChunks * 100 / avgChunks)
 
                 window.setTimeout(function(){
                     updateProgress(percent)
@@ -137,6 +139,11 @@ async.waterfall([
             res.on('end', function(){
                 var json = JSON.parse(data)
                 if (json && json.items){
+                    
+                    window.setTimeout(function(){
+                        updateProgress(100)
+                    }, 0)
+                    
                     var files = json.items
 
                     setTimeout(function(){
