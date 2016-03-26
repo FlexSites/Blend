@@ -118,8 +118,6 @@ async.waterfall([
             maxResults: 1000
         }, function(err, response, body){
             if (err) console.log(err)
-            // if (response) console.log(response)
-            // if (body) console.log(body.toJSON())
         })
         var _progress = 0
         req.on('response', function(res){
@@ -127,18 +125,13 @@ async.waterfall([
             var data = ""
 
             res.on('data', function(chunk){
-                // console.log('chunk: ', chunk)
-                // if (typeof chunk !== 'undefined')
                 data += chunk
                 _progress += chunk.length
                 var percent = parseInt(_progress * 100 / len)
 
                 window.setTimeout(function(){
-                    // console.log('percent: ', percent)
                     updateProgress(percent)
                 }, 0)
-
-                // updateProgress(percent)
             })
 
             res.on('end', function(){
@@ -178,7 +171,6 @@ async.waterfall([
         }
 
         $('#select').prepend(years)
-        // $('#select').prepend(document.createElement('br'))
 
         $('#years').multiselect({
             includeSelectAllOption: true,
@@ -259,12 +251,6 @@ async.waterfall([
             selectAllName: 'all-facilities',
             selectAllText: $(':input[name="all-facilities"]').prop('checked') ? 'Deselect All' : 'Select All',
 
-            // selectAllText: (1 == 1 ? 'true' : 'false'),
-            // selectAllNumber: true,
-
-            // onSelectAll: function(){
-            //     console.log( $(':input[name="all-facilities"]').prop('checked') )
-            // },
 
             onChange: function(option, checked){
                 var selectedOptions = $('#facilities option:selected')
@@ -276,7 +262,6 @@ async.waterfall([
             },
 
             buttonText: function(options, select){
-                // console.log(this)
                 if (options.length === 0) {
                     return 'Select Facilities';
                 }
@@ -297,19 +282,6 @@ async.waterfall([
                 }
             }
         })
-
-        // $(':input[name="all-facilities"]').on('click', function(){
-        //     console.log('clicked')
-        //     // var label = $(this).parent()
-        //     // var checked = this.checked
-
-        //     // var a = checked ? 'Deselect All' : 'Select All'
-        //     // var b = checked ? 'Select All' : 'Deselect All'
-
-        //     // console.log(a, b)
-
-        //     // label.html(label.html().replace(a, b))
-        // })
     }
 
 ], function(err, res){
