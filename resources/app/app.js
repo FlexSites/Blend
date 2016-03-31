@@ -212,9 +212,6 @@ async.waterfall([
         // move years over to make it and facilties into a combo button visually
         $('#years').next('.btn-group').css({ 'marginLeft': '-1px' })
 
-
-        console.log('files', files)
-
         // filter out certain workbooks
         files = files.filter(function(f){
             var lower = f.title.toLowerCase()
@@ -357,10 +354,12 @@ process = function(){
                         if(json && json.items){
                             excel = excel.concat(json.items)
                         }
+                        
 
                         if (progress === a.length){
+                            //Refactor: This needs to be refactored and fixed. It does nothing.
                             resetProgress()
-                            updateProgress(100/files.length)
+                            //updateProgress(100/a.length)
                             $('#status').html('Downloading Excel files&hellip;')
 
                             next(null, excel)
@@ -491,7 +490,6 @@ process = function(){
             ///////////////////////////
             // parse excel workbooks //
             ///////////////////////////
-            console.log('parse workbooks')
 
             var selectedYears = [].slice.call($('#years option:selected').map(function(y){
                 return parseInt($(this).val())
@@ -649,7 +647,6 @@ process = function(){
                                 var invoice  = row.INV
 
 
-                                console.log(invoice, fudate)
 
                                 // var start, end
 
