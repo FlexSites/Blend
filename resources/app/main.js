@@ -106,7 +106,6 @@ var template = [
         title: "Blend",
         'always-on-top': false,
         
-        'skip-taskbar': true,
         'use-content-size': false,
         'accept-first-mouse': true,
         show: false})
