@@ -1,3 +1,4 @@
 resources/app/node_modules/
 resources/app/docs/
 *.xlsx
+*.DS_Store

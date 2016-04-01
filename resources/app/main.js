@@ -12,9 +12,9 @@ app.on('window-all-closed', function(){
 
 app.on('ready', function(){
 
-process.on('uncaughtException', function(err){
-    alert(err)
-})
+//process.on('uncaughtException', function(err){
+//    alert(err)
+//})
 
 var name = app.getName()
 var template = [
