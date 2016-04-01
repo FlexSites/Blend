@@ -528,7 +528,8 @@ process = function(){
                 var workbookLower = w.title.toLowerCase()
                 return (
                         workbookLower.indexOf('laira') < 0 &&
-                        workbookLower.indexOf('old') < 0
+                        workbookLower.indexOf('old') < 0 &&
+                        workbookLower.indexOf('request') < 0
                         )
             })
 
