@@ -1131,8 +1131,9 @@ var getColumnNames = function(sheet){
     for (var c = 0; c <= range.e.c; c++){
         var addr = xlsx.utils.encode_cell({ r: 0, c: c })
         var cell = sheet[ addr ]
-
+        //console.log('This is cell: ', cell);
         if (!cell){
+            // console.log('Does this ever get called?');
             inc++
             cell = { v: 'Extra_' + inc }
         }

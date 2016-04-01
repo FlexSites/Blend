@@ -12,9 +12,9 @@ app.on('window-all-closed', function(){
 
 app.on('ready', function(){
 
-//process.on('uncaughtException', function(err){
-//    alert(err)
-//})
+process.on('uncaughtException', function(err){
+    alert(err)
+})
 
 var name = app.getName()
 var template = [
@@ -99,17 +99,17 @@ var template = [
     mainWindow = new BrowserWindow({
         width: 971,
         height: 600,
-        frame: false,
+        frame: true,
         center: true,
         resizable: true,
         transparent: false,
+        title: "Blend",
         'always-on-top': false,
         
-        // 'skip-taskbar': true,
+        'skip-taskbar': true,
         'use-content-size': false,
         'accept-first-mouse': true,
         show: false})
-    console.log('mainWindow object: ', mainWindow.lo);        
     mainWindow.loadURL('file://' + __dirname + '/index.html')
 
     mainWindow.show()
