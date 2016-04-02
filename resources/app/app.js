@@ -323,7 +323,6 @@ process = function(){
 
             // iterate over selected options
             selectedOptions.forEach(function(option, i, a){
-                // console.log('option: ', option.title)
 
                 var req = drive.children.list({
                     auth: jwt,
@@ -383,14 +382,9 @@ process = function(){
 
                 async.whilst(
                     function(){
-                        // console.log('progress: %d, count: %d\n\n', progress, count)
 
                         if (progress === files.length){
                             count = max
-                            // resetProgress()
-                            // updateProgress(1)
-                            // $('#status').html('Parsing Excel files&hellip;')
-                            // next(null, excel)
                         }
 
                         return count < max
@@ -409,11 +403,7 @@ process = function(){
                                 attempt()
                             } else {
                                 var title = res.title
-                                // console.log(title)
                                 var url   = res.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
-
-                                // if (count > 1) console.log('%c count: %d\t%s ', 'background:#222, color:#bada55', count, title)
-                                // if (count > 1) console.log('retry #%d: %s', count, title)
 
                                 if (url && title.toLowerCase().indexOf('requests') < 0){
                                     request.get({
@@ -433,7 +423,6 @@ process = function(){
                                                 console.log(err)
                                                 attempt()
                                             } else {
-                                                // console.log('file saved: ', title + '.xlsx')
 
                                                 progress++
                                                 var percent = parseInt(progress * 100 / files.length)
@@ -454,10 +443,9 @@ process = function(){
                                             }
                                         })
                                     }).on('response', function(res){
-                                        // console.log(res)
+                                        // Refactor: Should we be doing something with this response?
                                     })
                                 } else {
-                                    // console.log('ignore file: ', title)
 
                                     progress++
                                     var percent = parseInt(progress * 100 / files.length)
@@ -517,12 +505,6 @@ process = function(){
                 _sheets = { 'Main': [] }
             }
 
-
-
-
-
-
-
             // filter out certain workbooks
             workbooks = workbooks.filter(function(w){
                 var workbookLower = w.title.toLowerCase()
@@ -532,7 +514,6 @@ process = function(){
                         workbookLower.indexOf('request') < 0
                         )
             })
-
 
             if (!workbooks.length) next('No workbooks found')
 
@@ -554,19 +535,15 @@ process = function(){
                                 )
                     })
 
-
                     sheetNames.forEach(function(sheetName){
 
                         var year = sheetName.replace(/[^0-9]/g, '')
-                        // console.log('year: ', year)
 
                         var sheet = sheets[sheetName]
 
                         var headers = getColumnNames(sheet)
-                        // console.log(headers)
 
                         var rows = tojson( sheet, { header: headers, range: 1 })
-                        // console.log(rows)
 
                         rows.forEach(function(row, i){
 
@@ -587,7 +564,6 @@ process = function(){
 
                                 if (start){
                                     var rowYear = new Date(start).getFullYear()
-                                    // console.log(rowYear, selectedYears)
                                     if (selectedYears.indexOf(rowYear) < 0) return
                                 }
 
@@ -618,7 +594,6 @@ process = function(){
                                     if (!loc){
                                         Object.keys(row).forEach(function(key){
                                             if (key.indexOf('LEVEL') > -1){
-                                                // console.log('LEVEL instead of LOC')
                                                 loc = row[key]
                                             }
                                         })
@@ -626,13 +601,8 @@ process = function(){
                                     if (!loc) loc = ''
                                 }
 
-                                // if (loc === '') console.log('no LOC: ', wb.title, sheetName, (i + 2))
-
-                                // if(!loc) console.log(headers)
-
                                 // TODO should invalid units be '' or 0?
                                 var units    = parseInt( row.UNITS )
-                                // if (units == 0) console.log(wb.title, sheetName, (i + 2))
                                 if (isNaN(units)) units = ''
 
                                 var notes    = ''
@@ -646,51 +616,8 @@ process = function(){
                                 if (fudate === 'Invalid date') fudate = ''
 
                                 var invoice  = row.INV
-
-
-
-                                // var start, end
-
-                                // // var allDates = [row.DOS, row.BEGIN, row.END].filter(function(a){ return a !== undefined })
-                                // var allDates = [row.DOS, row.BEGIN, row.END].filter(Boolean)
-                                // var dosDates = getRange( allDates )
-
-                                // if (!dosDates.length) console.log('NO dates!')
-
-
-
-
-                                // var dosDates = getRange( row.DOS, row.BEGIN, row.END )
-
-                                // if (dosDates){
-                                //     start = dosDates[0]
-                                //     end   = dosDates[1]
-                                // }
-
-                                // console.log(row.DOS, row.BEGIN, row.END)
-                                // console.log(allDates)
-                                // console.log(dosDates)
-                                // console.log('--------------------------')
-
-
-                                // var start    = moment( new Date( row.DATEFROM || row.DOSFROM )).format('M/D/YY')
-                                // var end      = moment( new Date( row.DATETO || row.DOSTO )).format('M/D/YY')
-
-                                // // TODO ensure start before end, end before/on today, both valid
-                                // if (start === 'Invalid date' || end === 'Invalid date'){
-                                //     // if (row.DOS)
-                                //     //     console.log(row.DOS)
-                                //     // else if (row.DOSFROM)
-                                //     //     console.log(row.DOSFROM)
-                                //     // else
-                                //     //     console.log(row)
-                                // }
-                                // if (start === 'Invalid date') start = ''
-                                // if (end === 'Invalid date') end = ''
-
                                 var sent     = moment( new Date( row.SENT )).format('M/D/YY')
                                 var received = moment( new Date( row.RECEIVED )).format('M/D/YY')
-                                // var paydate  = moment( new Date( row.PAID2 )).format('M/D/YY')
                                 var paydate  = moment( new Date( row.DATEPAID )).format('M/D/YY')
 
                                 // TODO why are these invalid (missing)?
@@ -699,8 +626,6 @@ process = function(){
                                 if (paydate === 'Invalid date') paydate = ''
 
                                 // TODO update insurance names?
-
-
                                 // TODO verify rows with null color have in fact no color!
                                 var color = getRowColor( sheet, i + 2 )
 
@@ -710,15 +635,9 @@ process = function(){
                                 else if (brown.indexOf(color) > -1) _color = colors.brown
                                 else if (magenta.indexOf(color) > -1) _color = colors.magenta
                                 else if (green.indexOf(color) > -1) _color = colors.green
-
-                                    // console.log('color: ', _color)
-
+                                
                                 // TODO add facility to array
                                 var _row = [ '', invoice, ins, name, paid, billed, allowed, response, start, end, sent, received, paydate, check, notes, fudate, loc, units, balance, facility , _color ]
-
-                                // if (_color) _row.push(_color)
-
-
 
                                 // if separate by TX/POC, check for POC in loc
                                 var add = sepTXPOC ? (loc === 'POC' ? ' POC' : '') : ''
@@ -742,8 +661,6 @@ process = function(){
                                     _sheets[ 'Main' + add ].push(_row)
                                 }
 
-
-
                             } // end if name + insurance
 
                         }) // end rows for each
@@ -763,7 +680,6 @@ process = function(){
 
         var workbook = new Workbook()
 
-
         Object.keys(sheets).forEach(function(sheet){
 
             workbook.SheetNames.push(sheet)
@@ -779,12 +695,9 @@ process = function(){
             var _sheet = sheetFromArray( _array )
             _sheet['!cols'] = wscols
 
-            // console.log(JSON.stringify(_sheet))
-
             workbook.Sheets[sheet] = _sheet
 
         })
-
 
         var today = moment().format('M-D-YYYY h-mm-ssa')
         var filename = 'BLEND ' + today + '.xlsx'
@@ -817,8 +730,6 @@ var brown     = ['877852', '938950', '938953', '938954', '938955', '948A54', '98
 var red       = ['C00000', 'FF0000']
 var magenta   = ['C27BA0', 'FF00FF', 'FF33CC']
 
-// var _headers = ['Patient', 'Facility', 'LOC', 'Insurance', 'DOS From', 'DOS To', 'Billed', 'Allowed', 'Responsibility', 'Paid', 'Balance', 'Sent', 'Received', 'Payment Date', 'Check/Claim #', 'Notes', 'Units']
-
 var _headers = ['REPORT', 'INV #', 'INS.', 'NAME', 'PAID', 'BILLED', 'ALLOWED', 'PT REPSONS.', 'DATE FROM', 'DATE TO', 'SENT', 'RECEIVED', 'DATE PAID', 'CHECK/CL #', 'ADDITIONS NOTES', 'F/U DATE', 'LOC', 'UNITS', 'BALANCE', 'TC']
 
 var wscols = [ {wch:10}, {wch:12}, {wch:20}, {wch:20}, {wch:10}, {wch:12}, {wch:12}, {wch:14}, {wch:12}, {wch:12}, {wch:16}, {wch:12}, {wch:12}, {wch:18}, {wch:30}, {wch:28}, {wch:10}, {wch:10}, {wch:12}, {wch:20} ]
@@ -836,17 +747,13 @@ var Workbook = function(){
 var sheetFromArray = function(data){
     var _worksheet = {};
     var range = { s: { c: 1000000, r: 1000000 }, e: { c: 0, r: 0 }};
-    // var colCount = data[0].length;
 
     // cell indexes for alignment
     var align         = { headers: [2,3,13,14], others: [8,9,10,11,12,15,16,17] };
-    // var align         = { headers: [0,3,14,15], others: [2,4,5,11,12,13,16] };
-    // var alignWriteOff = { headers: [0,3,15,16], others: [1,2,4,5,12,13,14,17] };
 
     for (var R = 0; R != data.length; ++R){
         var rowColor = data[R][20]
 
-        // for (var C = 0; C != data[R].length; ++C){
         for (var C = 0; C != 20; ++C){
             if(range.s.r > R) range.s.r = R;
             if(range.s.c > C) range.s.c = C;
@@ -868,10 +775,6 @@ var sheetFromArray = function(data){
             cell.s = { 'font': { 'name': 'Verdana', 'sz' : 10 } }
 
             if (rowColor) cell.s.fill = { patternType: 'solid', fgColor: { rgb: rowColor }}
-
-            // cell.s = { 'font': { 'name': 'Verdana', 'sz' : 10 } }
-
-            // if (rowColor) cell.s.fill.bgColor.rgb = rowColor
 
             // cell alignment
             if (R == 0){ // set aligment, font weight and font size for columns in header row
@@ -901,11 +804,10 @@ var sheetFromArray = function(data){
 
     if(range.s.c < 1000000) _worksheet['!ref'] = xlsx.utils.encode_range(range);
 
-    // console.log(JSON.stringify(xlsx.utils.decode_range(_worksheet['!ref'])))
-
     return _worksheet;
 }
 
+// Refactor: Are these ever used?
 var prevBegin, prevEnd
 
 var getRange = function(dates){
@@ -955,164 +857,6 @@ var getRange = function(dates){
     return _dates
 }
 
-
-
-// // convert date ranges into separate properly formatted dates
-// _getRange = function(dos, begin, end) {
-
-//     if (dos) {
-
-//         var dates = dos.split('-');
-
-//         dates.sort();
-
-//         if (dates.length === 1) {
-//             begin = prevBegin = end = prevEnd = dates[0];
-//         } else if (dates.length === 2) {
-//             begin = prevBegin = dates[0];
-//             end   = prevEnd   = dates[1];
-//         } else if (dates.length === 0) {
-//             begin = prevBegin;
-//             end   = prevEnd;
-//         }
-
-//         // remove unwanted characters
-//         dates = dates.map(function(v, i){
-//             return dates[i] =  v.replace(/[^0-9\/]/g, "") // remove everything but numbers (0-9) and /
-//                                    .replace(/\/0/g,"\/") // replace /0#  with /# for easier dup matching
-//                                    .replace(/\b0+/g, "") // remove leading zeros
-//                                    .replace(/\/\d{2}(\d{2})/, "/$1") // replace 4-digit year with 2-digit
-//         });
-
-//         var uniq = uniqueArray( dates )
-//             .filter(function(v){ return v!=='' }) // remove empty strings from unique array;
-//             .filter(function(v){ return v.split('/').length !== 1 }); // filter out terms without / in them, (e.g %, $, words, decimals)
-
-//         for (var i=0; i<uniq.length;i++){
-//             uniq[i] = moment( new Date( uniq[i] ) ).format('MM/DD/YY');
-//         }
-
-//         // determine the correct year
-//         var year = '';
-
-//         var l = uniq.length;
-//         while(l--){
-//             var split = uniq[l].split('/');
-//             if (split.length === 3) {
-//                                                             // console.log(dos)
-//                 // console.log(dos, begin, end)
-//                 year = split.pop();
-
-//                                                             // console.log(year)
-//                 break;
-//             }
-//         }
-
-//         uniq = uniqueArray( uniq );
-//         if (uniq.length === 1) uniq.push(uniq[0]);
-
-//         uniq = uniq.map(function(v){
-//             var split = v.split('/')
-//                                                             // console.log(split, split.length)
-//             if (split.length < 3){
-//                 // console.log('missing year: ', split)
-//                 // console.log(v + '/'+ year)
-//                 // console.log('----------')
-//                 return v + '/' + year
-//             } else {
-//                 // console.log('date is correct format: ', v)
-//                 // console.log('----------')
-//                 return v
-//             }
-//             // return v.split('/').length < 3 ? v + '/' + year : v;
-//         });
-
-//                                                         // console.log('-------------------')
-
-//         if (!uniq.length) {
-//             uniq = prevDates;
-//         } else {
-//             prevDates = uniq;
-//         }
-
-//         return uniq;
-
-//     }
-
-//     else if (begin || end) {
-//         var beginDates = [],
-//             endDates = [],
-//             dates = [];
-
-//         // split mult. dates in begin field
-//         if (begin) {
-//             beginDates = begin.split('-');
-//             if (beginDates.length) dates = dates.concat( beginDates );
-//         }
-
-//         // split mult. dates in end field
-//         if (end) {
-//             endDates = end.split('-');
-//             if (endDates.length) dates = dates.concat( endDates );
-//         }
-
-//         // remove unwanted characters
-//         dates = dates.map(function(v, i){
-//             return dates[i] =  v.replace(/[^0-9\/]/g, "") // remove everything but numbers (0-9) and /
-//                                    .replace(/\/0/g,"\/") // replace /0#  with /# for easier dup matching
-//                                    .replace(/\b0+/g, "") // remove leading zeros
-//                                    .replace(/\/\d{2}(\d{2})/, "/$1") // replace 4-digit year with 2-digit
-//         });
-
-
-//         var uniq = uniqueArray( dates )
-//             .filter(function(v){ return v!=='' }) // remove empty strings from unique array;
-//             .filter(function(v){ return v.split('/').length !== 1 }); // filter out terms without / in them, (e.g %, $, words, decimals)
-
-//         // determine the correct year
-//         var year = '';
-
-//         var l = uniq.length;
-//         while(l--){
-//             var split = uniq[l].split('/');
-//             if (split.length === 3) {
-//                 year = split.pop();
-//                 break;
-//             }
-//         }
-
-//         uniq = uniq.map(function(v){
-//             return v.split('/').length < 3 ? v + '/' + year : v;
-//         });
-
-//         uniq = uniqueArray( uniq );
-
-//         if (uniq.length === 1) uniq.push(uniq[0]);
-
-//         for (var i=0; i<uniq.length;i++){
-//             uniq[i] = moment( new Date( uniq[i] ) ).format('MM/DD/YY');
-//         }
-
-//         if (!uniq.length) {
-//             uniq = prevDates;
-//         } else {
-//             prevDates = uniq;
-//         }
-
-//         return uniq;
-
-//     }
-
-//     else {
-//         begin = moment( new Date( prevBegin ) ).format('MM/DD/YY');
-//         end   = moment( new Date( prevEnd) ).format('MM/DD/YY');
-
-//         var uniq = [ begin, end ];
-
-//         return uniq;
-//     }
-// }
-
 // return unique array
 var uniqueArray = function(a) {
     var uniq = a.filter(function(item, pos) {
@@ -1132,13 +876,10 @@ var getColumnNames = function(sheet){
     for (var c = 0; c <= range.e.c; c++){
         var addr = xlsx.utils.encode_cell({ r: 0, c: c })
         var cell = sheet[ addr ]
-        //console.log('This is cell: ', cell);
         if (!cell){
-            // console.log('Does this ever get called?');
             inc++
             cell = { v: 'Extra_' + inc }
         }
-        // if (!cell) continue
 
         var column = cell.v.toString().replace(/[^a-zA-Z]/g, '').toUpperCase().trim()
 
@@ -1148,7 +889,6 @@ var getColumnNames = function(sheet){
         else if (column === "DOSTO") column = "END"
 
         if (columns.indexOf(column) > -1 && column !== '') column += '2'
-        // if (columns.indexOf(column) > -1) column += '2'
         columns.push( column )
     }
 
