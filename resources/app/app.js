@@ -9,6 +9,8 @@ String.prototype.toTitleCase = function(){
 
 var remote  = require('remote'),
     app     = remote.require('app');
+    
+var view = require('./view');
 
 var BrowserWindow = remote.require('browser-window')
 
@@ -64,75 +66,10 @@ $('#quit').on('click', function(){
 // new report //
 ////////////////
 $('#new').on('click', function(){
-    $('.multiselect-search').val('')
-    $('#facilities').multiselect('deselectAll', false)
-    $('#facilities').multiselect('updateButtonText')
-    $('li').show().removeClass('filter-hidden')
-
-    $('#years').multiselect('selectAll', false)
-    $('#years').multiselect('updateButtonText')
-
-    $('#quit').hide()
-    $('#new').hide()
-
-    $('#status').html('Choose facilities&hellip;')
-
-    $('#blend').addClass('disabled')
-
-    $('#select').show()
-    $('#blend').show()
+    view.resetForNew();
 })
 
-//Refactor: Turn this into a function:
-var years = document.createElement('select')
-years.id = 'years'
-years.name = 'years'
-years.multiple = 'multiple'
-
-var thisYear = new Date().getFullYear()
-
-for (var y = 2011; y <= thisYear; y++){
-    var option = document.createElement('option')
-    option.value = y
-    option.text  = y
-    years.appendChild(option)
-}
-
-$('#select').prepend(years)
-
-$('#years').multiselect({
-    includeSelectAllOption: true,
-    buttonWidth: '160px',
-    buttonText: function(options, select){
-        var len = select[0].options.length
-
-        if (options.length === 0){
-            return 'Select Years'
-        } else if (options.length === len){
-            return 'All Years'
-        } else if (options.length > 2){
-            return options.length + ' years selected'
-        } else {
-            var labels = [];
-            options.each(function(){
-                if ($(this).attr('label') !== undefined) {
-                    labels.push($(this).attr('label'))
-                } else {
-                    labels.push($(this).html())
-                }
-            })
-
-            return labels.join(', ') + ''
-        }
-    }
-})
-
-$('#years').multiselect('selectAll', false)
-$('#years').multiselect('updateButtonText')
-
-// move years over to make it and facilties into a combo button visually
-$('#years').next('.btn-group').css({ 'marginLeft': '-1px' })
-
+view.buildYears();
 
 ///////////////////
 // async testing //
@@ -180,7 +117,7 @@ async.waterfall([
                 var percent = parseInt(numChunks * 100 / avgChunks)
 
                 window.setTimeout(function(){
-                    updateProgress(percent)
+                    view.updateProgress(percent)
                 }, 0)
             })
 
@@ -189,7 +126,7 @@ async.waterfall([
                 if (json && json.items){
                     
                     window.setTimeout(function(){
-                        updateProgress(100)
+                        view.updateProgress(100)
                     }, 0)
                     
                     var files = json.items
@@ -302,8 +239,8 @@ process = function(){
 
             // hide select, reset/show progress, change status message
             $('#select').hide()
-            resetProgress()
-            updateProgress(1)
+            view.resetProgress()
+            view.updateProgress(1)
             $('.progress').show()
             $('#status').html('Locating Excel files&hellip;')
 
@@ -345,7 +282,7 @@ process = function(){
 
                         progress++
                         var percent = parseInt(progress * 100 / a.length)
-                        updateProgress(percent)
+                        view.updateProgress(percent)
 
                         var json = JSON.parse(data)
 
@@ -356,7 +293,7 @@ process = function(){
 
                         if (progress === a.length){
                             //Refactor: This needs to be refactored and fixed. It does nothing.
-                            resetProgress()
+                            view.resetProgress()
                             //updateProgress(100/a.length)
                             $('#status').html('Downloading Excel files&hellip;')
 
@@ -425,7 +362,7 @@ process = function(){
 
                                                 progress++
                                                 var percent = parseInt(progress * 100 / files.length)
-                                                updateProgress(percent)
+                                                view.updateProgress(percent)
 
                                                 try {
                                                     var wb = xlsx.read(res.body, { cellStyles: true })
@@ -448,7 +385,7 @@ process = function(){
 
                                     progress++
                                     var percent = parseInt(progress * 100 / files.length)
-                                    updateProgress(percent)
+                                    view.updateProgress(percent)
 
                                     count = max
                                     attempt()
@@ -459,8 +396,8 @@ process = function(){
                     function(err){
 
                         if (progress === files.length){
-                            resetProgress()
-                            updateProgress(1)
+                            view.resetProgress()
+                            view.updateProgress(1)
                             $('#status').html('Parsing Excel files&hellip;')
 
                             next(null, excel)
@@ -922,15 +859,4 @@ var getRowColor = function(sheet, row){
 
     // return null
     return 'FFFFFF'
-}
-
-var resetProgress = function(){
-    // turn off progress bar transitions, reset to 0, restore transitions
-    $('.progress-bar').addClass('notransition')
-    updateProgress(0)
-    $('.progress-bar').remove('notransition')
-}
-
-var updateProgress = function(val){
-     $('.progress-bar').css('width', val + '%').attr('aria-valuenow', val)
 }
