@@ -38,7 +38,9 @@ var fs     = require('fs-extra'),
     open   = require('open'),
     async  = require('async'),
     glob   = require('glob');
-
+    
+var EXCLUDEWORKBOOKS = ['laira', 'old', 'blank', 'request', 'alpine recovery lodge', 'olympus drug and alcohol', 'renaissance outpatient bountiful', 'renaissance ranch- orem', 'renaissance ranch- ut outpatient'];
+var EXCLUDESHEETS = ['fax', 'copy', 'appeal', 'laira', 'checks', 'responses', 'ineligible'];
 
 //////////////////////////////////
 // process files on click blend //
@@ -150,19 +152,13 @@ async.waterfall([
 
         // filter out certain workbooks
         files = files.filter(function(f){
-            var lower = f.title.toLowerCase()
             return (
-                    lower.indexOf('laira') < 0 &&
-                    lower.indexOf('blank') < 0 &&
-                    lower.indexOf('request') < 0 &&
-                    lower.indexOf('alpine recovery lodge') < 0 &&
-                    lower.indexOf('olympus drug and alcohol') < 0 &&
-                    lower.indexOf('renaissance outpatient bountiful') < 0 &&
-                    lower.indexOf('renaissance ranch- orem') < 0 &&
-                    lower.indexOf('renaissance ranch- ut outpatient') < 0
+                        filterByArray(f.title, EXCLUDEWORKBOOKS)
                     )
         })
-
+        
+        console.log('files after: ', files)
+        
         if (files && files.length){
             files.forEach(function(file){
 
@@ -443,13 +439,12 @@ process = function(){
 
             // filter out certain workbooks
             workbooks = workbooks.filter(function(w){
-                var workbookLower = w.title.toLowerCase()
                 return (
-                        workbookLower.indexOf('laira') < 0 &&
-                        workbookLower.indexOf('old') < 0 &&
-                        workbookLower.indexOf('request') < 0
+                            filterByArray(w.title, EXCLUDEWORKBOOKS)
                         )
             })
+            
+            console.log("workbooks after: ", workbooks)
 
             if (!workbooks.length) next('No workbooks found')
 
@@ -459,15 +454,8 @@ process = function(){
 
                     // filter out sheets
                     sheetNames = sheetNames.filter(function(s){
-                        var sheetLower = s.toLowerCase()
                         return (
-                                sheetLower.indexOf('fax') < 0 &&
-                                sheetLower.indexOf('copy') < 0 &&
-                                sheetLower.indexOf('appeal') < 0 &&
-                                sheetLower.indexOf('laira') < 0 &&
-                                sheetLower.indexOf('checks') < 0 &&
-                                sheetLower.indexOf('responses') < 0 &&
-                                sheetLower.indexOf('ineligible') < 0
+                                    filterByArray(s, EXCLUDESHEETS)
                                 )
                     })
 
@@ -859,4 +847,12 @@ var getRowColor = function(sheet, row){
 
     // return null
     return 'FFFFFF'
+}
+
+var filterByArray = function(name, array){
+    var notfound = true
+    array.forEach(function(exclude){
+        if (name.toLowerCase().indexOf(exclude) > -1) notfound = false
+    })
+    return notfound
 }
