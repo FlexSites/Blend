@@ -39,7 +39,7 @@ var fs     = require('fs-extra'),
     async  = require('async'),
     glob   = require('glob');
     
-var EXCLUDEWORKBOOKS = ['laira', 'old', 'blank', 'request', 'alpine recovery lodge', 'olympus drug and alcohol', 'renaissance outpatient bountiful', 'renaissance ranch- orem', 'renaissance ranch- ut outpatient'];
+var EXCLUDEWORKBOOKS = ['laira', 'blank', 'request', 'alpine recovery lodge', 'olympus drug and alcohol', 'renaissance outpatient bountiful', 'renaissance ranch- orem', 'renaissance ranch- ut outpatient'];
 var EXCLUDESHEETS = ['fax', 'copy', 'appeal', 'laira', 'checks', 'responses', 'ineligible'];
 
 //////////////////////////////////
@@ -156,8 +156,6 @@ async.waterfall([
                         filterByArray(f.title, EXCLUDEWORKBOOKS)
                     )
         })
-        
-        console.log('files after: ', files)
         
         if (files && files.length){
             files.forEach(function(file){
@@ -444,8 +442,6 @@ process = function(){
                         )
             })
             
-            console.log("workbooks after: ", workbooks)
-
             if (!workbooks.length) next('No workbooks found')
 
                 workbooks.forEach(function(wb){
