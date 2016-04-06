@@ -532,13 +532,14 @@ process = function(){
                                     if (key.indexOf('CHECK') > -1) check = row[key]
                                 })
 
-                                var fudate   = moment( new Date( row.FUDATE )).format('M/D/YY')
+                                var fudate   = moment( new Date( row.FUDATE )).format('l')
                                 if (fudate === 'Invalid date') fudate = ''
 
                                 var invoice  = row.INV
-                                var sent     = moment( new Date( row.SENT )).format('M/D/YY')
-                                var received = moment( new Date( row.RECEIVED )).format('M/D/YY')
-                                var paydate  = moment( new Date( row.DATEPAID )).format('M/D/YY')
+                                // var sent     = moment( new Date( row.SENT )).format('M/D/YY')
+                                var sent     = moment( new Date( row.SENT )).format('l')
+                                var received = moment( new Date( row.RECEIVED )).format('l')
+                                var paydate  = moment( new Date( row.DATEPAID )).format('l')
 
                                 // TODO why are these invalid (missing)?
                                 if (sent === 'Invalid date') sent = ''
@@ -557,7 +558,7 @@ process = function(){
                                 else if (green.indexOf(color) > -1) _color = colors.green
                                 
                                 // TODO add facility to array
-                                var _row = [ '', invoice, ins, name, paid, billed, allowed, response, start, end, sent, received, paydate, check, notes, fudate, loc, units, balance, facility , _color ]
+                                var _row = [ '', invoice, ins, name, paid, billed, allowed, response, start, end, sent, received, paydate, check, notes, fudate, loc, units, balance, facility, _color ]
 
                                 // if separate by TX/POC, check for POC in loc
                                 var add = sepTXPOC ? (loc === 'POC' ? ' POC' : '') : ''
@@ -622,8 +623,9 @@ process = function(){
         var today = moment().format('M-D-YYYY h-mm-ssa')
         var filename = 'BLEND ' + today + '.xlsx'
         var filepath = path.join(__dirname, filename)
+        var wopts = { tabSelected:false }
 
-        xlsx.writeFile( workbook, filepath )
+        xlsx.writeFile( workbook, filepath, wopts )
         open(filepath)
 
         $('#status').html('Report Complete')
@@ -665,6 +667,8 @@ var Workbook = function(){
 
 // create sheet from array
 var sheetFromArray = function(data){
+    
+    console.log('data: ', data)
     var _worksheet = {};
     var range = { s: { c: 1000000, r: 1000000 }, e: { c: 0, r: 0 }};
 
@@ -723,7 +727,6 @@ var sheetFromArray = function(data){
     }
 
     if(range.s.c < 1000000) _worksheet['!ref'] = xlsx.utils.encode_range(range);
-
     return _worksheet;
 }
 
@@ -772,7 +775,7 @@ var getRange = function(dates){
     if (_dates.length == 1) _dates.push(_dates[0])
 
     // _dates.map(function(d){ return moment(new Date(d)).format('M/D/YY') })
-    _dates = _dates.map(function(d){ return moment(new Date(d)).format('M/D/YY') })
+    _dates = _dates.map(function(d){ return moment(new Date(d)).format('l') })
 
     return _dates
 }
