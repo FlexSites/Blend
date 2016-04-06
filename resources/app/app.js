@@ -466,7 +466,7 @@ process = function(){
                         var rows = tojson( sheet, { header: headers, range: 1 })
 
                         rows.forEach(function(row, i){
-
+                            
                             var ins  = row.INS
                             var name = row.NAME
                             if (name) name = name.trim()
@@ -503,6 +503,7 @@ process = function(){
                                 var paid     = currencyNumber( row.PAID ) || 0
                                 var allowed  = currencyNumber( row.ALLOWED ) || 0
                                 var response = currencyNumber( row.PTRESPONS ) || 0
+                                var bulkamount = currencyNumber( row.BULKAMOUNT ) || 0
                                 var balance  = (billed * 100 - paid * 100) / 100 || 0
 
                                 // TODO if loc = MED, MM or FT, GOP
@@ -557,7 +558,7 @@ process = function(){
                                 else if (green.indexOf(color) > -1) _color = colors.green
                                 
                                 // TODO add facility to array
-                                var _row = [ '', invoice, ins, name, paid, billed, allowed, response, start, end, sent, received, paydate, check, notes, fudate, loc, units, balance, facility, _color ]
+                                var _row = [ '', invoice, ins, name, paid, billed, allowed, response, start, end, sent, received, paydate, check, bulkamount, notes, fudate, loc, units, balance, facility, _color ]
 
                                 // if separate by TX/POC, check for POC in loc
                                 var add = sepTXPOC ? (loc === 'POC' ? ' POC' : '') : ''
@@ -651,9 +652,9 @@ var brown     = ['877852', '938950', '938953', '938954', '938955', '948A54', '98
 var red       = ['C00000', 'FF0000']
 var magenta   = ['C27BA0', 'FF00FF', 'FF33CC']
 
-var _headers = ['REPORT', 'INV #', 'INS.', 'NAME', 'PAID', 'BILLED', 'ALLOWED', 'PT REPSONS.', 'DATE FROM', 'DATE TO', 'SENT', 'RECEIVED', 'DATE PAID', 'CHECK/CL #', 'ADDITIONS NOTES', 'F/U DATE', 'LOC', 'UNITS', 'BALANCE', 'TC']
+var _headers = ['REPORT', 'INV #', 'INS.', 'NAME', 'PAID', 'BILLED', 'ALLOWED', 'PT REPSONS.', 'DATE FROM', 'DATE TO', 'SENT', 'RECEIVED', 'DATE PAID', 'CHECK/CL #', 'BULK AMOUNT', 'ADDITIONS NOTES', 'F/U DATE', 'LOC', 'UNITS', 'BALANCE', 'TC']
 
-var wscols = [ {wch:10}, {wch:12}, {wch:20}, {wch:20}, {wch:10}, {wch:12}, {wch:12}, {wch:14}, {wch:12}, {wch:12}, {wch:16}, {wch:12}, {wch:12}, {wch:18}, {wch:30}, {wch:28}, {wch:10}, {wch:10}, {wch:12}, {wch:20} ]
+var wscols = [ {wch:10}, {wch:12}, {wch:20}, {wch:20}, {wch:10}, {wch:12}, {wch:12}, {wch:14}, {wch:12}, {wch:12}, {wch:16}, {wch:12}, {wch:12}, {wch:18}, {wch:12}, {wch:30}, {wch:28}, {wch:10}, {wch:10}, {wch:12}, {wch:20} ]
 
 
 // excel workbook class
@@ -670,12 +671,12 @@ var sheetFromArray = function(data){
     var range = { s: { c: 1000000, r: 1000000 }, e: { c: 0, r: 0 }};
 
     // cell indexes for alignment
-    var align         = { headers: [2,3,13,14], others: [8,9,10,11,12,15,16,17] };
+    var align         = { headers: [2,3,13,15], others: [8,9,10,11,12,16,17,18] };
 
     for (var R = 0; R != data.length; ++R){
-        var rowColor = data[R][20]
+        var rowColor = data[R][21]
 
-        for (var C = 0; C != 20; ++C){
+        for (var C = 0; C != 21; ++C){
             if(range.s.r > R) range.s.r = R;
             if(range.s.c > C) range.s.c = C;
             if(range.e.r < R) range.e.r = R;
@@ -712,7 +713,7 @@ var sheetFromArray = function(data){
             }
 
             // format currency cells
-            if (((C > 3 && C < 8) || C == 18) && R !== 0){
+            if (((C > 3 && C < 8) || C == 14 || C == 19) && R !== 0){
                 cell.t = 'n';
                 cell.z = '$#,#0.00';
                 cell.numFmt = '$0,000.00';
