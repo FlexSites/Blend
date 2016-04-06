@@ -536,7 +536,6 @@ process = function(){
                                 if (fudate === 'Invalid date') fudate = ''
 
                                 var invoice  = row.INV
-                                // var sent     = moment( new Date( row.SENT )).format('M/D/YY')
                                 var sent     = moment( new Date( row.SENT )).format('l')
                                 var received = moment( new Date( row.RECEIVED )).format('l')
                                 var paydate  = moment( new Date( row.DATEPAID )).format('l')
@@ -667,8 +666,6 @@ var Workbook = function(){
 
 // create sheet from array
 var sheetFromArray = function(data){
-    
-    console.log('data: ', data)
     var _worksheet = {};
     var range = { s: { c: 1000000, r: 1000000 }, e: { c: 0, r: 0 }};
 
