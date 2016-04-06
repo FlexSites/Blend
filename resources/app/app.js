@@ -335,7 +335,7 @@ process = function(){
                                 var title = res.title
                                 var url   = res.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
 
-                                if (url && title.toLowerCase().indexOf('requests') < 0){
+                                if (url && title.toLowerCase().indexOf('request') < 0){
                                     request.get({
                                         url: url,
                                         encoding: null,
