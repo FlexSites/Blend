@@ -645,7 +645,7 @@ var colors = {
 
 // for comparing row colors
 var white     = ['FFFFFF', 'FFFF00'] // white, yellow
-var blue      = ['00B0F0']
+var blue      = ['00B0F0', '24AEFF']
 var green     = ['00FF00', '66FF33', '6AA84F']
 var brown     = ['877852', '938950', '938953', '938954', '938955', '948A54', '988D55']
 var red       = ['C00000', 'FF0000']
