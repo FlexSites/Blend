@@ -4,7 +4,8 @@
   "description": "An Elevated Billing electron based application for taking spreadsheets from google drive and blending them together for better use.",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node scripts/package.js"
   },
   "author": "Tim Collinson",
   "license": "SEE LICENSE IN LICENSE",
@@ -21,7 +22,10 @@
   "directories": {
     "doc": "docs"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "electron-packager": "^6.0.1",
+    "jsonfile": "^2.2.3"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://bitbucket.org/elevatedbilling/blend.git"

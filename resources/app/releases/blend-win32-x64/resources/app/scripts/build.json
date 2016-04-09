@@ -1,0 +1,17 @@
+{
+    "dir": "",
+    "name": "blend",
+    "platform": "win32",
+    "arch": "x64",
+    "version": "0.37.3",
+    "out": "",
+    "app-bundle-id": "",
+    "overwrite": true,
+    "asar": false,
+    "icon": "",
+    "app_version": "0.3.0",
+    "bundle_id": "",
+    "appname": "blend",
+    "sourcedir": "",
+    "ignore": ".gitignore"
+}
