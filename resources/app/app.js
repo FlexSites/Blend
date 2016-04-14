@@ -254,16 +254,7 @@ process = function(){
             // iterate over selected options
             selectedOptions.forEach(function(option, i, a){
 
-                var req = drive.children.list({
-                    auth: jwt,
-                    q: query,
-                    folderId: option.id,
-                    // timeout: 10000,
-                    forever: true,
-                    gzip: true
-                }, function(err, res){
-                    if (err) console.log('find excel err', err)
-                })
+                var req = getReq(query, option)
 
                 req.on('response', function(res){
                     var data = ''
@@ -852,4 +843,23 @@ var filterByArray = function(name, array){
         if (name.toLowerCase().indexOf(exclude) > -1) notfound = false
     })
     return notfound
+}
+
+var getReq = function(query, option) {
+    var req = drive.children.list({
+        auth: jwt,
+        q: query,
+        folderId: option.id,
+        forever: true,
+        gzip: true
+    }, function(err, res) {
+        setTimeout(function() {
+            if (err) { 
+                console.log('find excel err', err)
+                getReq(query, option)
+            }
+        }, 333)
+    })
+
+    return req
 }
