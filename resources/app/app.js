@@ -42,11 +42,17 @@ var fs = require('fs-extra'),
 var EXCLUDEWORKBOOKS = ['laira', 'blank', 'request', 'alpine recovery lodge', 'olympus drug and alcohol', 'renaissance outpatient bountiful', 'renaissance ranch- orem', 'renaissance ranch- ut outpatient', ' old'];
 var EXCLUDESHEETS = ['fax', 'copy', 'appeal', 'laira', 'checks', 'responses', 'ineligible'];
 
+var selectedYears = []
 //////////////////////////////////
 // process files on click blend //
 //////////////////////////////////
 $('#blend').on('click', function () {
-    if (!$(this).hasClass('disabled')) process()
+    if (!$(this).hasClass('disabled')) {
+        selectedYears = [].slice.call($('#years option:selected').map(function (y) {
+            return parseInt($(this).val())
+        }))
+        process()
+    }
 })
 
 /////////////////
@@ -325,8 +331,7 @@ process = function () {
                             } else {
                                 var title = res.title
                                 var url = res.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
-
-                                if (url && title.toLowerCase().indexOf('request') < 0) {
+                                if (url && filterByArray(title, EXCLUDEWORKBOOKS)) {
                                     request.get({
                                         url: url,
                                         encoding: null,
@@ -353,6 +358,26 @@ process = function () {
                                                     var wb = xlsx.read(res.body, { cellStyles: true })
                                                     if (wb) {
                                                         wb.title = title
+
+                                                        wb.SheetNames = wb.SheetNames.filter(function (s) {
+                                                            return filterByArray(s, EXCLUDESHEETS)
+                                                        })
+                                                        
+                                                        wb.SheetNames = wb.SheetNames.filter(function(s){
+                                                            return !filterByArray(s, selectedYears)
+                                                        })
+
+                                                        var parsedSheets = []
+                                                        wb.SheetNames.forEach(function (sn) {
+                                                            if (wb.Sheets[sn]) {
+                                                                parsedSheets[sn] = wb.Sheets[sn]
+                                                            }
+
+                                                        })
+                                                        
+                                                        wb.Sheets = parsedSheets
+                                                        
+
                                                         excel.push(wb)
                                                         count = max
                                                     }
@@ -400,9 +425,6 @@ process = function () {
             // parse excel workbooks //
             ///////////////////////////
 
-            var selectedYears = [].slice.call($('#years option:selected').map(function (y) {
-                return parseInt($(this).val())
-            }))
 
             var sepTXPOC = $('#sep-txpoc').is(':checked')
             var sepColor = $('#sep-color').is(':checked')
