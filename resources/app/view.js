@@ -1,15 +1,15 @@
-var updateProgress = function(val){
-     $('.progress-bar').css('width', val + '%').attr('aria-valuenow', val)
+var updateProgress = function (val) {
+    $('.progress-bar').css('width', val + '%').attr('aria-valuenow', val)
 }
 
-var resetProgress = function(){
+var resetProgress = function () {
     // turn off progress bar transitions, reset to 0, restore transitions
     $('.progress-bar').addClass('notransition')
     updateProgress(0)
     $('.progress-bar').remove('notransition')
 }
 
-var buildYears = function(){
+var buildYears = function () {
     //Refactor: Turn this into a function:
     var years = document.createElement('select')
     years.id = 'years'
@@ -18,10 +18,10 @@ var buildYears = function(){
 
     var thisYear = new Date().getFullYear()
 
-    for (var y = 2011; y <= thisYear; y++){
+    for (var y = 2011; y <= thisYear; y++) {
         var option = document.createElement('option')
         option.value = y
-        option.text  = y
+        option.text = y
         years.appendChild(option)
     }
 
@@ -30,18 +30,18 @@ var buildYears = function(){
     $('#years').multiselect({
         includeSelectAllOption: true,
         buttonWidth: '160px',
-        buttonText: function(options, select){
+        buttonText: function (options, select) {
             var len = select[0].options.length
 
-            if (options.length === 0){
+            if (options.length === 0) {
                 return 'Select Years'
-            } else if (options.length === len){
+            } else if (options.length === len) {
                 return 'All Years'
-            } else if (options.length > 2){
+            } else if (options.length > 2) {
                 return options.length + ' years selected'
             } else {
                 var labels = [];
-                options.each(function(){
+                options.each(function () {
                     if ($(this).attr('label') !== undefined) {
                         labels.push($(this).attr('label'))
                     } else {
@@ -61,7 +61,7 @@ var buildYears = function(){
     $('#years').next('.btn-group').css({ 'marginLeft': '-1px' })
 }
 
-var resetForNew = function(){
+var resetForNew = function () {
     $('.multiselect-search').val('')
     $('#facilities').multiselect('deselectAll', false)
     $('#facilities').multiselect('updateButtonText')
