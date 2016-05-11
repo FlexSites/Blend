@@ -380,11 +380,12 @@ process = function () {
 
                                                         excel.push(wb)
                                                         count = max
+                                                        wb = null
                                                     }
                                                 } catch (e) {
                                                     console.log('error parsing excel')
                                                 }
-
+                                                
                                                 attempt()
                                             }
                                         })
@@ -437,13 +438,14 @@ process = function () {
                     'Write Off': [], 'Write Off POC': [],        // magenta
                     'Payment Member': [], 'Payment Member POC': [],   // blue
                     'Payment Facility': [], 'Payment Facility POC': [],  // green
+                    'Orange': [], 'Orange POC': [], // orange
                     'Confirmed Paid': [], 'Confirmed Paid POC': [],   // brown
                     'Denied': [], 'Denied POC': []            // red
                 }
             } else if (sepTXPOC && !sepColor) { // separate by TX/POC
                 _sheets = { 'Main': [], 'Main POC': [] }
             } else if (!sepTXPOC && sepColor) { // separate by row color
-                _sheets = { 'Open': [], 'Write Off': [], 'Payment Member': [], 'Payment Facility': [], 'Confirmed Paid': [], 'Denied': [] }
+                _sheets = { 'Open': [], 'Write Off': [], 'Payment Member': [], 'Payment Facility': [], 'Orange': [], 'Confirmed Paid': [], 'Denied': [] }
             } else { // do NOT separate rows
                 _sheets = { 'Main': [] }
             }
@@ -569,6 +571,7 @@ process = function () {
                             else if (brown.indexOf(color) > -1) _color = colors.brown
                             else if (magenta.indexOf(color) > -1) _color = colors.magenta
                             else if (green.indexOf(color) > -1) _color = colors.green
+                            else if (orange.indexOf(color) > -1) _color = colors.orange
 
                             // TODO add facility to array
                             var _row = ['', invoice, ins, name, paid, billed, allowed, response, start, end, sent, received, paydate, check, bulkamount, notes, fudate, loc, units, balance, facility, _color]
@@ -590,6 +593,8 @@ process = function () {
                                     _sheets['Write Off' + add].push(_row)
                                 } else if (green.indexOf(color) > -1) {
                                     _sheets['Payment Facility' + add].push(_row)
+                                } else if (orange.indexOf(color) > -1) {
+                                    _sheets['Orange' + add].push(_row)
                                 }
                             } else {
                                 _sheets['Main' + add].push(_row)
@@ -654,7 +659,8 @@ var colors = {
     brown: 'FF938953',
     red: 'FFFF0000',
     magenta: 'FFFF00FF',
-    yellow: 'FFFFFF00'
+    yellow: 'FFFFFF00',
+    orange: 'FFFF9900'
 }
 
 // for comparing row colors
@@ -664,6 +670,7 @@ var green = ['00FF00', '66FF33', '6AA84F']
 var brown = ['877852', '938950', '938953', '938954', '938955', '948A54', '988D55']
 var red = ['C00000', 'FF0000']
 var magenta = ['C27BA0', 'FF00FF', 'FF33CC']
+var orange = ['FF9900']
 
 var _headers = ['REPORT', 'INV #', 'INS.', 'NAME', 'PAID', 'BILLED', 'ALLOWED', 'PT REPSONS.', 'DATE FROM', 'DATE TO', 'SENT', 'RECEIVED', 'DATE PAID', 'CHECK/CL #', 'BULK AMOUNT', 'ADDITIONS NOTES', 'F/U DATE', 'LOC', 'UNITS', 'BALANCE', 'TC']
 
