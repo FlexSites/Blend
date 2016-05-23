@@ -839,7 +839,11 @@ var getColumnNames = function (sheet) {
 // convert currency to number
 var currencyNumber = function (amount) {
     var f = null
-    if (amount) f = parseFloat(amount.replace(/[^0-9\.-]+/g, ""))
+    if (amount && typeof amount === 'string') {
+        f = parseFloat(amount.replace(/[^0-9\.-]+/g, ""))
+    } else {
+        f = amount
+    }
     return f
 }
 
