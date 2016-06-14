@@ -1,8 +1,8 @@
 "use strict";
-
-var app = require('app')
-var BrowserWindow = require('browser-window')
-var Menu = require('menu')
+var electron = require('electron')
+var app = electron.app
+var BrowserWindow = electron.BrowserWindow
+var Menu = electron.Menu
 
 var mainWindow = null
 

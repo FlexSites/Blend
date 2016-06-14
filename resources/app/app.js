@@ -7,12 +7,10 @@ String.prototype.toTitleCase = function () {
     return str;
 }
 
-var remote = require('remote'),
-    app = remote.require('app');
-
 var view = require('./view');
 
-var BrowserWindow = remote.require('browser-window')
+// var BrowserWindow = remote.require('browser-window')
+var BrowserWindow = require('electron').remote
 
 var google = require('googleapis'),
     drive = google.drive('v2'),
@@ -59,7 +57,7 @@ $('#blend').on('click', function () {
 // reload page //
 /////////////////
 $('#reload').on('click', function () {
-    var focused = BrowserWindow.getFocusedWindow()
+    var focused = BrowserWindow.getCurrentWebContents()
     if (focused) focused.reloadIgnoringCache()
 })
 
@@ -67,7 +65,8 @@ $('#reload').on('click', function () {
 // quit app //
 //////////////
 $('#quit').on('click', function () {
-    app.quit()
+    var focused = BrowserWindow.getCurrentWindow()
+    if (focused) focused.close()
 })
 
 ////////////////
