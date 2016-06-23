@@ -20,8 +20,6 @@ var router = express.Router();
 
 router.get('/', function(req, res) {
 	res.json({ message: 'api is here'});
-	console.log(facilities);
-	console.log(facilities.getFacilities());
 });
 
 

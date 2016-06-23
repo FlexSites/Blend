@@ -1,17 +1,14 @@
-var viewFunction = function() {
-    var view;
-view.updateProgress = function (val) {
+define({
+updateProgress : function (val) {
     $('.progress-bar').css('width', val + '%').attr('aria-valuenow', val)
-}
-
-view.resetProgress = function () {
+},
+resetProgress : function () {
     // turn off progress bar transitions, reset to 0, restore transitions
     $('.progress-bar').addClass('notransition')
     updateProgress(0)
     $('.progress-bar').remove('notransition')
-}
-
-view.buildYears = function () {
+},
+buildYears : function () {
     //Refactor: Turn this into a function:
     var years = document.createElement('select')
     years.id = 'years'
@@ -61,9 +58,8 @@ view.buildYears = function () {
 
     // move years over to make it and facilties into a combo button visually
     $('#years').next('.btn-group').css({ 'marginLeft': '-1px' })
-}
-
-view.resetForNew = function () {
+},
+resetForNew : function () {
     $('.multiselect-search').val('')
     $('#facilities').multiselect('deselectAll', false)
     $('#facilities').multiselect('updateButtonText')
@@ -82,5 +78,5 @@ view.resetForNew = function () {
     $('#select').show()
     $('#blend').show()
 }
-    return view;
-}
+
+})

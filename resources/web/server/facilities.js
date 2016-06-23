@@ -106,12 +106,12 @@ module.exports.getFacilities = function(callback) {
         	.filter((file) => {
         		return !~EXCLUDEWORKBOOKS.indexOf(file) && get(file, 'parents.0.id') === '0B_kSXk5v54QYeFRucElOQWlpdG8';
         	})
-          .map((file) => ({
-          	value: file.id,
-          	text: file.title,
-          }));
+			.map((file) => ({
+				value: file.id,
+				text: file.title,
+			}));
 
-				next(null, files);
+			next(null, files);
 	    }
 
 	], callback)
