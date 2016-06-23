@@ -1,156 +1,119 @@
-var async = require('async');
-var facilities = function(){
-	var self;
+var google = require('googleapis'),
+    drive = google.drive('v2'),
+    JWT = google.auth.JWT,
+    request = require('request'),
+    path = require('path'),
+    get = require('object-path').get;
 
-	self.getFacilities = function(){
+var SERVICE_ACCOUNT_EMAIL = '780463185858-924al4jpqutjbvcbq6bp1lk91t4gmt34@developer.gserviceaccount.com',
+    CLIENT_ID = '780463185858-924al4jpqutjbvcbq6bp1lk91t4gmt34.apps.googleusercontent.com',
+    SERVICE_ACCOUNT_KEY_FILE = path.join(__dirname, 'elevated-numbers.pem'),
+    SCOPE = ['https://www.googleapis.com/auth/drive'];
 
-		async.waterfall([
-		    function (next) {
-		        ////////////////////////////////
-		        // google drive authorization //
-		        ////////////////////////////////
-		        jwt.authorize(function (err, tokens) {
-		            if (err) next(err)
+var jwt = new JWT(
+    SERVICE_ACCOUNT_EMAIL,
+    SERVICE_ACCOUNT_KEY_FILE,
+    null,
+    SCOPE);
 
-		            jwt.credentials = tokens
+var fs = require('fs-extra'),
+    xlsx = require('xlsx-style'),
+    moment = require('moment'),
+    tojson = xlsx.utils.sheet_to_json,
+    open = require('open'),
+    async = require('async'),
+    glob = require('glob');
 
-		            next()
-		        })
-		    },
+var EXCLUDEWORKBOOKS = ['laira', 'blank', 'request', 'alpine recovery lodge', 'olympus drug and alcohol', 'renaissance outpatient bountiful', 'renaissance ranch- orem', 'renaissance ranch- ut outpatient', ' old'];
+var EXCLUDESHEETS = ['fax', 'copy', 'appeal', 'laira', 'checks', 'responses', 'ineligible'];
 
-		    function (next) {
-		        ////////////////////////////////
-		        // get list of client folders //
-		        ////////////////////////////////
-		        var req = drive.files.list({
-		            auth: jwt,
-		            folderId: '0B_kSXk5v54QYeFRucElOQWlpdG8',
-		            q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
-		            orderBy: 'title',
-		            forever: true,
-		            gzip: true,
-		            timeout: 1,
-		            maxResults: 1000
-		        }, function (err, response, body) {
-		            if (err) console.log(err)
-		        })
+var selectedYears = []
 
+module.exports.getFacilities = function(callback) {
+	var facilities = [];
+	async.waterfall([
+	    function (next) {
+	        ////////////////////////////////
+	        // google drive authorization //
+	        ////////////////////////////////
+	        jwt.authorize(function (err, tokens) {
+	            if (err) next(err)
 
-		        req.on('response', function (res) {
-		            var avgChunks = 250;
-		            var numChunks = 0;
-		            var data = ""
+	            jwt.credentials = tokens
+	          	console.log('authorize', err, tokens);
+	            next(null);
+	        })
+	    },
 
-		            res.on('data', function (chunk) {
-		                data += chunk
-		                numChunks += 1
-		                var percent = parseInt(numChunks * 100 / avgChunks)
-
-		                window.setTimeout(function () {
-		                    view.updateProgress(percent)
-		                }, 0)
-		            })
-
-		            res.on('end', function () {
-		                var json = JSON.parse(data)
-		                if (json && json.items) {
-
-		                    window.setTimeout(function () {
-		                        view.updateProgress(100)
-		                    }, 0)
-
-		                    var files = json.items
-
-		                    setTimeout(function () {
-		                        next(null, files)
-		                    }, 777)
-		                }
-		            })
-		        })
-		    },
-
-		    function (files, next) {
-		        ///////////////////////////////////////////////
-		        // filter folder list and create html select //
-		        ///////////////////////////////////////////////
-		        var select = document.createElement('select')
-		        select.id = 'facilities'
-		        select.name = 'facilities'
-		        select.multiple = 'multiple'
-
-		        // filter out certain workbooks
-		        files = files.filter(function (f) {
-		            return (
-		                filterByArray(f.title, EXCLUDEWORKBOOKS)
-		            )
-		        })
-
-		        if (files && files.length) {
-		            files.forEach(function (file) {
-
-		                if (file.parents && file.parents.length > 0 && file.parents[0].id === '0B_kSXk5v54QYeFRucElOQWlpdG8') {
-		                    var option = document.createElement('option')
-		                    option.value = file.id
-		                    option.text = file.title
-		                    select.appendChild(option)
-		                }
-		            })
-		        }
-
-		        $('.progress').hide()
-		        $('#status').html('Choose facilities&hellip;')
-		        $('#select').prepend(select)
-		        $('#select').show()
-
-		        $('#facilities').multiselect({
-		            maxHeight: 310,
-		            buttonWidth: '400px',
-		            enableFiltering: true,
-		            testing: 'something',
-		            includeSelectAllOption: true,
-		            enableCaseInsensitiveFiltering: true,
-
-		            selectAllName: 'all-facilities',
-		            selectAllText: $(':input[name="all-facilities"]').prop('checked') ? 'Deselect All' : 'Select All',
+	    function (next) {
+	        ////////////////////////////////
+	        // get list of client folders //
+	        ////////////////////////////////
+	        var req = drive.files.list({
+	            auth: jwt,
+	            folderId: '0B_kSXk5v54QYeFRucElOQWlpdG8',
+	            q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+	            orderBy: 'title',
+	            forever: true,
+	            gzip: true,
+	            timeout: 1,
+	            maxResults: 1000
+	        }, function (err, response, body) {
+	            if (err) console.log(err)
+	            	console.log('drive');
+	        })
 
 
-		            onChange: function (option, checked) {
-		                var selectedOptions = $('#facilities option:selected')
+	        req.on('response', function (res) {
+	            var avgChunks = 250;
+	            var numChunks = 0;
+	            var data = ""
 
-		                if (selectedOptions.length > 0)
-		                    $('#blend').removeClass('disabled')
-		                else
-		                    $('#blend').addClass('disabled')
-		            },
+	            res.on('data', function (chunk) {
+	                data += chunk
+	                numChunks += 1
+	                var percent = parseInt(numChunks * 100 / avgChunks)
 
-		            buttonText: function (options, select) {
-		                if (options.length === 0) {
-		                    return 'Select Facilities';
-		                }
-		                else if (options.length > 4) {
-		                    return options.length + ' selected'
-		                }
-		                else {
-		                    var labels = [];
-		                    options.each(function () {
-		                        if ($(this).attr('label') !== undefined) {
-		                            labels.push($(this).attr('label'))
-		                        } else {
-		                            labels.push($(this).html())
-		                        }
-		                    })
+	                // window.setTimeout(function () {
+	                //     view.updateProgress(percent)
+	                // }, 0)
+	            })
 
-		                    return labels.join(', ') + ''
-		                }
-		            }
-		        })
-		    }
+	            res.on('end', function () {
+	            	console.log('ending stream');
+	                var json = JSON.parse(data)
+	                if (json && json.items) {
 
-		], function (err, res) {
-		    if (err) console.log('some error: ', err)
-		})
+	                    // window.setTimeout(function () {
+	                    //     view.updateProgress(100)
+	                    // }, 0)
 
-		return self;
-	}
+	                    var files = json.items
+
+	                    next(null,files);
+
+	                    // setTimeout(function () {
+	                    //     next(null, files)
+	                    // }, 777)
+	                }
+	            })
+	        })
+	    },
+
+	    function (files, next) {
+        // filter out certain workbooks
+        files = files
+        	.filter((file) => {
+        		return !~EXCLUDEWORKBOOKS.indexOf(file) && get(file, 'parents.0.id') === '0B_kSXk5v54QYeFRucElOQWlpdG8';
+        	})
+          .map((file) => ({
+          	value: file.id,
+          	text: file.title,
+          }));
+
+				next(null, files);
+	    }
+
+	], callback)
 }
-module.exports = facilities();
+

@@ -28,7 +28,10 @@ router.get('/', function(req, res) {
 
 router.route('/facilities')
 	.get(function(req, res) {
-
+		facilities.getFacilities(function(err, facilities){
+			console.log('what the crap!!!', err, facilities)
+			return res.json({'facilities': facilities})
+		});
 	});
 
 app.use('/api', router);
@@ -39,6 +42,5 @@ app.use('/api', router);
 
 app.listen(3000, function () {
 	console.log('Example app listening on port 3000!');
-	open("http://localhost:3000/");
 });
 
