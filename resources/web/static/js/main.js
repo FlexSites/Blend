@@ -22,6 +22,27 @@ $(function(){
         });
     }
 
+    $('#blend').on('click', function () {
+        if (!$(this).hasClass('disabled')) {
+            var selectedYears = [].slice.call($('#years option:selected').map(function (y) {
+                return parseInt($(this).val())
+            }));
+            var selectedOptions = [].slice.call($('#facilities option:selected').map(function (a, item) {
+                return { id: item.value, title: item.innerHTML }
+            }));
+            var years = encodeURIComponent(JSON.stringify(selectedYears));
+            var options = encodeURIComponent(JSON.stringify(selectedOptions));
+            var sepTXPOC = $('#sep-txpoc').is(':checked');
+            var sepColor = $('#sep-color').is(':checked');
+            $('#select').hide();
+            $('.progress').show();
+            $('#status').html('Locating Excel files&hellip;');
+            $.get('/api/blend?options=' + options + '&years=' + years + '&txpoc=' + sepTXPOC + '&color=' + sepColor, function(data) {
+
+            });
+        }
+    })
+
 
     function displayFacilities (files) {
         var select = document.createElement('select')
@@ -30,10 +51,8 @@ $(function(){
         select.multiple = 'multiple'
 
         // filter out certain workbooks
-        console.log(files);
         if (files && files.facilities.length) {
             files.facilities.forEach(function (file) {
-                console.log(file);
                 var option = document.createElement('option')
                 option.value = file.value
                 option.text = file.text
