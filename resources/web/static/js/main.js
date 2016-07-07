@@ -38,7 +38,10 @@ $(function(){
             $('.progress').show();
             $('#status').html('Locating Excel files&hellip;');
             $.get('/api/blend?options=' + options + '&years=' + years + '&txpoc=' + sepTXPOC + '&color=' + sepColor, function(data) {
-
+                $('#status').html('Report Complete')
+                $('.progress').hide()
+                $('#new').show()
+                $('#quit').show()
             });
         }
     })

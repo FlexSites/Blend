@@ -266,16 +266,14 @@ module.exports.getBlend = function(selectedOptions, selectedYears, sepTXPOC, sep
 	        forever: true,
 	        gzip: true
 	    }, function (err, res) {
-	    	console.log(res);
+	    	callback(res);
 	        setTimeout(function () {
 	            if (err) {
 	                console.log('find excel err', err)
 	                getReq(query, option, callback)
 	            }
 	        }, 333)
-	    })
-	    console.log(req);
-	    callback(req);
+	    })	    
 	}
     async.waterfall([
         function (next) {
@@ -304,46 +302,50 @@ module.exports.getBlend = function(selectedOptions, selectedYears, sepTXPOC, sep
             var excel = []
 
             // iterate over selected options
-            selectedOptions.forEach(function (option, i, a) {
-            	console.log(query, option);
-                getReq(query, option, function(req){
-                	console.log(req);
+            async.eachSeries(selectedOptions, function iteratee(option, callback) {
+            	getReq(query, option, function(res){
+                	// console.log(res);
 
-	                req.on('response', function (res) {
-	                    var data = ''
+	                // req.on('response', function (res) {
+	                //     var data = ''
 
-	                    res.on('data', function (chunk) {
-	                        data += chunk
-	                    })
+	                //     res.on('data', function (chunk) {
+	                //         data += chunk
+	                //     })
 
-	                    res.on('end', function () {
+	                //     res.on('end', function () {
 
-	                        progress++
-	                        var percent = parseInt(progress * 100 / a.length)
-	                        // view.updateProgress(percent)
+	                //         progress++
+	                //         var percent = parseInt(progress * 100 / a.length)
+	                //         // view.updateProgress(percent)
 
-	                        var json = JSON.parse(data)
+	                        var json = res;
 
 	                        if (json && json.items) {
 	                            excel = excel.concat(json.items)
+	                            console.log(excel.length);
 	                        }
 
 
-	                        if (progress === a.length) {
-	                            //Refactor: This needs to be refactored and fixed. It does nothing.
-	                            // view.resetProgress()
-	                            //updateProgress(100/a.length)
-	                            // $('#status').html('Downloading Excel files&hellip;')
+	                        // if (progress === a.length) {
+	                        //     //Refactor: This needs to be refactored and fixed. It does nothing.
+	                        //     // view.resetProgress()
+	                        //     //updateProgress(100/a.length)
+	                        //     // $('#status').html('Downloading Excel files&hellip;')
 
-	                            next(null, excel)
-	                        }
+	                        //     next(null, excel)
+	                        // }
 
-	                    })
-	                })
+	                //     })
+	                // })
+	                callback();
                 });
-
-                
-            })
+            	
+            }, function (err) {
+            	if (err) { console.log('error selected options') };
+            	console.log('going next now');
+            	next(null, excel);
+            });
         },
 
         function (files, next) {
@@ -352,8 +354,9 @@ module.exports.getBlend = function(selectedOptions, selectedYears, sepTXPOC, sep
             //////////////////////////
             var progress = 0
             var excel = []
-
+            console.log(files);
             async.eachSeries(files, function (file, done) {
+            	console.log('herelkjsdaflkjadsf;lkajf;lkjasdl;kjas;lkjl;akdsjf');
 
                 var count = 0, max = 6
 
@@ -561,7 +564,7 @@ module.exports.getBlend = function(selectedOptions, selectedYears, sepTXPOC, sep
                                 .replace('follow up', '')
                                 .replace(/\d+/g, '')
                                 .trim()
-                                .toTitleCase()
+                                // .toTitleCase()
 
 
                             var billed = currencyNumber(row.BILLED) || 0
@@ -661,7 +664,47 @@ module.exports.getBlend = function(selectedOptions, selectedYears, sepTXPOC, sep
 
             next(null, _sheets)
 
-        }
+        },
+        function (err, sheets) {
+	        if (err) console.log(err);
+	        else console.log('all done')
+
+	        var workbook = new Workbook()
+
+	        Object.keys(sheets).forEach(function (sheet) {
+
+	            workbook.SheetNames.push(sheet)
+
+	            var _array = sheets[sheet]
+	            _array.sort(function (a, b) {
+	                if (a && b) {
+	                    return a[3].localeCompare(b[3])
+	                }
+	            })
+	            _array.unshift(_headers)
+
+	            var _sheet = sheetFromArray(_array)
+	            _sheet['!cols'] = wscols
+
+	            workbook.Sheets[sheet] = _sheet
+
+	        })
+
+	        var today = moment().format('M-D-YYYY h-mm-ssa')
+	        var filename = 'BLEND ' + today + '.xlsx'
+	        var filepath = path.join(__dirname, filename)
+	        var wopts = { tabSelected: false }
+
+	        xlsx.writeFile(workbook, filepath, wopts)
+
+	        return filepath;
+	        // open(filepath)
+
+	        // $('#status').html('Report Complete')
+	        // $('.progress').hide()
+	        // $('#new').show()
+	        // $('#quit').show()
+	    }
 
     // ], function (err, sheets) {
     //     if (err) alert(err)
