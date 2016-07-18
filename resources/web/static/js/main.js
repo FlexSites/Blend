@@ -37,12 +37,16 @@ $(function(){
             $('#select').hide();
             $('.progress').show();
             $('#status').html('Locating Excel files&hellip;');
-            $.get('/api/blend?options=' + options + '&years=' + years + '&txpoc=' + sepTXPOC + '&color=' + sepColor, function(data) {
-                $('#status').html('Report Complete')
-                $('.progress').hide()
-                $('#new').show()
-                $('#quit').show()
-            });
+
+            $("<iframe/>").attr({
+                src: '/api/blend?options=' + options + '&years=' + years + '&txpoc=' + sepTXPOC + '&color=' + sepColor,
+                style: "visibility:hidden;display:none"
+            }).appendTo($('#wrapper'));
+
+            $('#status').html('Report Complete')
+            $('.progress').hide()
+            $('#new').show()
+            $('#quit').show()
         }
     })
 

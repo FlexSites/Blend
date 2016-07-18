@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node scripts/package.js"
+    "build": "node scripts/package.js",
+    "electron": "electron ."
   },
   "author": "Tim Collinson",
   "license": "SEE LICENSE IN LICENSE",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "electron-packager": "^6.0.1",
+    "electron-prebuilt": "^1.2.7",
     "jsonfile": "^2.2.3"
   },
   "repository": {
