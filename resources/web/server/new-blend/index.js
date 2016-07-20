@@ -31,6 +31,8 @@ let jwt = new JWT(
   null,
   SCOPE)
 
+const SAVE_FILEPATH = path.join(__dirname, 'streamed-workbook.xlsx')
+
 const fs = require('fs-extra')
 const xlsx = require('xlsx-style')
 const XLSXStream = require('xlsx-stream')
@@ -207,7 +209,7 @@ module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, f
       if (!workbooks.length) next('No workbooks found')
 
       var options = {
-        filename: './streamed-workbook.xlsx'
+        filename: SAVE_FILEPATH
       }
       var crazything = new Excel.stream.xlsx.WorkbookWriter(options)
       _sheets = _sheets.map((name) => crazything.addWorksheet(name))
@@ -352,21 +354,17 @@ module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, f
       // crazything.eachSheet(function (worksheet, key) {
       //   worksheet
       //     .commit()
-      //     .then(stuff => console.log('key', key))
+          // .then(stuff => console.log('key', key))
       //     .catch(ex => console.error(key, ex))
       // })
 
       setTimeout(function () {
         crazything.commit()
-          .then(results => {
-            console.log('stream written', results)
-            return results
-          })
+          .then(() => next())
           .catch(ex => {
             console.log('horrible thing', ex)
           })
       }, 1000)
-      next(null, _sheets)
     }
 
   ], function (err, sheets) {
@@ -392,13 +390,10 @@ module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, f
     //   workbook.Sheets[sheet] = _sheet
     // })
 
-    let today = moment().format('M-D-YYYY h-mm-ssa')
-    let filename = 'BLEND ' + today + '.xlsx'
-    let filepath = path.join(__dirname, filename)
     // let wopts = { tabSelected: false }
 
     // xlsx.writeFile(workbook, filepath, wopts)
-    finished(null, filepath)
+    finished(null, SAVE_FILEPATH)
 
     // $('#status').html('Report Complete')
     // $('.progress').hide()

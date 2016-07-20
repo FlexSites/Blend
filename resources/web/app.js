@@ -40,9 +40,8 @@ router.route('/blend')
 		var url_parts = url.parse(req.url, true);
 		blend(JSON.parse(url_parts.query.options), JSON.parse(url_parts.query.years), url_parts.query.txpoc, url_parts.query.color, function(err, blendFile){
 			if (err) return next(err);
-
 			res.download(blendFile, 'blend-file.xlsx', (err) => {
-				console.log('sendfile worked', err)
+				console.log('sendfile worked', err, blendFile)
 			})
 			// var filename = path.basename(blendFile)
 			// var mimetype = mime.lookup(filename)
