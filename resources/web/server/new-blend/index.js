@@ -16,11 +16,9 @@ let google = require('googleapis')
 const drive = google.drive('v2')
 const JWT = google.auth.JWT
 const request = require('request')
-const diffColor = require('./lib/color-match')
 const path = require('path')
 const Bluebird = require('bluebird')
 const Excel = require('exceljs')
-const glob = require('glob')
 
 const SERVICE_ACCOUNT_EMAIL = '780463185858-924al4jpqutjbvcbq6bp1lk91t4gmt34@developer.gserviceaccount.com'
 const CLIENT_ID = '780463185858-924al4jpqutjbvcbq6bp1lk91t4gmt34.apps.googleusercontent.com'
@@ -32,6 +30,8 @@ let jwt = new JWT(
   SERVICE_ACCOUNT_KEY_FILE,
   null,
   SCOPE)
+
+const SAVE_FILEPATH = path.join(__dirname, 'streamed-workbook.xlsx')
 
 const fs = require('fs-extra')
 const xlsx = require('xlsx-style')
@@ -48,116 +48,115 @@ let EXCLUDESHEETS = ['fax', 'copy', 'appeal', 'laira', 'checks', 'responses', 'i
 
 module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, finished) {
   async.waterfall([
-    // function (next) {
-    //   // /////////////////////////////////////////////////
-    //   // find excel files in selected facility folders //
-    //   // /////////////////////////////////////////////////
-
-    //   // iterate over selected options
-    //   Bluebird.reduce(
-    //     selectedOptions,
-    //     (all, option) =>
-    //       getReq("mimeType = 'application/vnd.google-apps.spreadsheet'", option)
-    //         .then(json => {
-    //           if (json && json.items) {
-    //             return all.concat(json.items)
-    //           }
-    //           return all
-    //         }),
-    //     []
-    //   ).then(files => next(null, files))
-    //   .catch(next)
-    // },
-
-    // function (files, next) {
-    //   console.log('download excel files', files.length)
-    //   // ////////////////////////
-    //   // download excel files //
-    //   // ////////////////////////
-    //   let progress = 0
-    //   let excel = []
-
-    //   async.each(files, function (file, done) {
-    //     console.log('async series')
-    //     let count = 0
-    //     let max = 6
-
-    //     async.whilst(
-    //       function () {
-    //         if (progress === files.length) {
-    //           count = max
-    //         }
-
-    //         return count < max
-    //       },
-    //       function (attempt) {
-    //         count++
-    //         console.log('attempt', file.id)
-    //         drive.files.get({
-    //           auth: jwt,
-    //           fileId: file.id,
-    //           forever: true,
-    //           gzip: true
-    //         }, function (err, res) {
-    //           if (err) {
-    //             console.log(err)
-    //             attempt()
-    //           } else {
-    //             let title = res.title
-    //             let url = res.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
-    //             if (url && filterByArray(title, EXCLUDEWORKBOOKS)) {
-    //               request.get({
-    //                 url: url,
-    //                 encoding: null,
-    //                 'qs': { 'access_token': jwt.credentials.access_token },
-    //                 forever: true,
-    //                 gzip: true
-    //               }, (err, res) => {
-    //                 if (count > 1) console.log('retry #%d: %s', count, title)
-    //                 progress++
-    //                 let pathname = path.join(__dirname, 'docs', title + '.xlsx')
-
-    //                 fs.writeFileSync(pathname, res.body)
-
-    //                 try {
-    //                   excel.push([pathname, title, selectedYears])
-    //                   count = max
-    //                 } catch (e) {
-    //                   console.log('error parsing excel')
-    //                 }
-
-    //                 attempt()
-    //               })
-    //             } else {
-    //               progress++
-
-    //               count = max
-    //               attempt()
-    //             }
-    //           }
-    //         })
-    //       },
-    //       (err) => {
-    //         if (progress === files.length) {
-    //           // view.resetProgress()
-    //           // view.updateProgress(1)
-    //           // $('#status').html('Parsing Excel files&hellip;')
-
-    //           next(null, excel)
-    //         }
-
-    //         done()
-    //       }
-    //     ) // end whilst
-    //   }) // end each
-    // },
-
     function (next) {
-      const paths = glob.sync(path.join(__dirname, 'docs/**/*.xlsx')).map(uri => {
-        return [uri, path.basename(uri, '.xlsx'), [2011, 2012, 2013, 2014, 2015, 2016]]
-      })
+      // /////////////////////////////////////////////////
+      // find excel files in selected facility folders //
+      // /////////////////////////////////////////////////
 
-      console.log(paths)
+      // iterate over selected options
+      Bluebird.reduce(
+        selectedOptions,
+        (all, option) =>
+          getReq("mimeType = 'application/vnd.google-apps.spreadsheet'", option)
+            .then(json => {
+              if (json && json.items) {
+                return all.concat(json.items)
+              }
+              return all
+            }),
+        []
+      ).then(files => next(null, files))
+      .catch(next)
+    },
+
+    function (files, next) {
+      console.log('download excel files', files.length)
+      // ////////////////////////
+      // download excel files //
+      // ////////////////////////
+      let progress = 0
+      let excel = []
+
+      async.each(files, function (file, done) {
+        console.log('async series')
+        let count = 0
+        let max = 6
+
+        async.whilst(
+          function () {
+            if (progress === files.length) {
+              count = max
+            }
+
+            return count < max
+          },
+          function (attempt) {
+            count++
+            console.log('attempt', file.id)
+            drive.files.get({
+              auth: jwt,
+              fileId: file.id,
+              forever: true,
+              gzip: true
+            }, function (err, res) {
+              if (err) {
+                console.log(err)
+                attempt()
+              } else {
+                let title = res.title
+                let url = res.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+                if (url && filterByArray(title, EXCLUDEWORKBOOKS)) {
+                  request.get({
+                    url: url,
+                    encoding: null,
+                    'qs': { 'access_token': jwt.credentials.access_token },
+                    forever: true,
+                    gzip: true
+                  }, (err, res) => {
+                    if (count > 1) console.log('retry #%d: %s', count, title)
+                    progress++
+                    let pathname = path.join(__dirname, 'docs', title + '.xlsx')
+
+                    fs.writeFileSync(pathname, res.body)
+
+                    try {
+                      excel.push([pathname, title, selectedYears])
+                      count = max
+                    } catch (e) {
+                      console.log('error parsing excel')
+                    }
+
+                    attempt()
+                  })
+                } else {
+                  progress++
+
+                  count = max
+                  attempt()
+                }
+              }
+            })
+          },
+          (err) => {
+            if (progress === files.length) {
+              // view.resetProgress()
+              // view.updateProgress(1)
+              // $('#status').html('Parsing Excel files&hellip;')
+
+              next(null, excel)
+            }
+
+            done()
+          }
+        ) // end whilst
+      }) // end each
+    },
+
+    function (paths, next) {
+      next(null, paths.map(args => readXLSX(...args)))
+    },
+
+    function (workbooks, next) {
       // /////////////////////////
       // parse excel workbooks //
       // /////////////////////////
@@ -207,36 +206,165 @@ module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, f
         _sheets = [ 'Main' ]
       }
 
-      if (!paths.length) next('No workbooks found')
+      if (!workbooks.length) next('No workbooks found')
 
       var options = {
-        filename: './streamed-workbook.xlsx'
+        filename: SAVE_FILEPATH
       }
       var crazything = new Excel.stream.xlsx.WorkbookWriter(options)
       _sheets = _sheets.map((name) => crazything.addWorksheet(name))
 
-      Bluebird.all(paths.map((args) => parseWorkbook(args, selectedYears, sepTXPOC, sepColor, crazything)))
-        .then(results => {      
-          setTimeout(function () {
-            crazything.commit()
-              .then(results => {
-                console.log('stream written', results)
-                return results
+      workbooks.forEach(function (wb) {
+        let sheets = wb.Sheets
+        let sheetNames = wb.SheetNames
+
+        console.log('workbook parse')
+
+        sheetNames.forEach(function (sheetName) {
+          let sheet = sheets[sheetName]
+
+          let headers = getColumnNames(sheet)
+
+          let rows = tojson(sheet, { header: headers, range: 1 })
+
+          console.log('sheetname', sheetName)
+
+          rows.forEach(function (row, i) {
+            let ins = row.INS
+            let name = row.NAME
+            if (name) name = name.trim()
+
+            if (name && ins) {
+              let start, end
+              // test dates first, if not within selected years, skip
+              let allDates = [row.DOS, row.BEGIN, row.END].filter(Boolean)
+              let dosDates = getRange(allDates)
+
+              if (dosDates) {
+                start = dosDates[0]
+                end = dosDates[1]
+              }
+
+              if (start) {
+                let rowYear = new Date(start).getFullYear()
+                if (selectedYears.indexOf(rowYear) < 0) return
+              }
+
+              let facility = wb.title
+                .toLowerCase()
+                .replace('claim', '')
+                .replace('cl followup', '')
+                .replace('followup', '')
+                .replace('follow-up', '')
+                .replace('follow up', '')
+                .replace(/\d+/g, '')
+                .trim()
+                .toTitleCase()
+
+              let billed = currencyNumber(row.BILLED) || 0
+              let paid = currencyNumber(row.PAID) || 0
+              let allowed = currencyNumber(row.ALLOWED) || 0
+              let response = currencyNumber(row.PTRESPONS) || 0
+              let bulkamount = currencyNumber(row.BULKAMOUNT) || 0
+              let balance = (billed * 100 - paid * 100) / 100 || 0
+
+              // TODO if loc = MED, MM or FT, GOP
+              let loc
+              if (sheetName.indexOf('POC') > -1) {
+                loc = 'POC'
+              } else {
+                loc = row.LOC
+                if (!loc) {
+                  Object.keys(row).forEach(function (key) {
+                    if (key.indexOf('LEVEL') > -1) {
+                      loc = row[key]
+                    }
+                  })
+                }
+                if (!loc) loc = ''
+              }
+
+              // TODO should invalid units be '' or 0?
+              let units = parseInt(row.UNITS)
+              if (isNaN(units)) units = ''
+
+              let notes = ''
+              let check = ''
+              Object.keys(row).forEach(function (key) {
+                if (key.indexOf('NOTE') > -1) notes = row[key]
+                if (key.indexOf('CHECK') > -1) check = row[key]
               })
-              .catch(ex => {
-                console.log('horrible thing', ex)
-              })
-          }, 1000)
-          next(null, _sheets)
-        })
+
+              let fudate = moment(new Date(row.FUDATE)).format('l')
+              if (fudate === 'Invalid date') fudate = ''
+
+              let invoice = row.INV
+              let sent = moment(new Date(row.SENT)).format('l')
+              let received = moment(new Date(row.RECEIVED)).format('l')
+              let paydate = moment(new Date(row.DATEPAID)).format('l')
+
+              // TODO why are these invalid (missing)?
+              if (sent === 'Invalid date') sent = ''
+              if (received === 'Invalid date') received = ''
+              if (paydate === 'Invalid date') paydate = ''
+
+              // TODO update insurance names?
+              // TODO verify rows with null color have in fact no color!
+              let color = getRowColor(sheet, i + 2)
+
+              let _color
+              if (blue.indexOf(color) > -1) _color = colors.blue
+              else if (red.indexOf(color) > -1) _color = colors.red
+              else if (brown.indexOf(color) > -1) _color = colors.brown
+              else if (magenta.indexOf(color) > -1) _color = colors.magenta
+              else if (green.indexOf(color) > -1) _color = colors.green
+              else if (orange.indexOf(color) > -1) _color = colors.orange
+
+              // TODO add facility to array
+              let _row = ['', invoice, ins, name, paid, billed, allowed, response, start, end, sent, received, paydate, check, bulkamount, notes, fudate, loc, units, balance, facility, _color]
+
+              // if separate by TX/POC, check for POC in loc
+              let add = sepTXPOC ? (loc === 'POC' ? ' POC' : '') : ''
+
+              // if separate by color, else push all to 'Main' sheet
+              if (sepColor) {
+                if (white.indexOf(color) > -1) {
+                  crazything.getWorksheet('Open' + add).addRow(_row).commit()
+                } else if (blue.indexOf(color) > -1) {
+                  crazything.getWorksheet('Payment Member' + add).addRow(_row).commit()
+                } else if (red.indexOf(color) > -1) {
+                  crazything.getWorksheet('Denied' + add).addRow(_row).commit()
+                } else if (brown.indexOf(color) > -1) {
+                  crazything.getWorksheet('Confirmed Paid' + add).addRow(_row).commit()
+                } else if (magenta.indexOf(color) > -1) {
+                  crazything.getWorksheet('Write Off' + add).addRow(_row).commit()
+                } else if (green.indexOf(color) > -1) {
+                  crazything.getWorksheet('Payment Facility' + add).addRow(_row).commit()
+                } else if (orange.indexOf(color) > -1) {
+                  crazything.getWorksheet('Orange' + add).addRow(_row).commit()
+                }
+              } else {
+                crazything.getWorksheet('Main' + add).addRow(_row).commit()
+              }
+            } // end if name + insurance
+          }) // end rows for each
+        }) // end sheet for each
+      }) // end workbooks for each
 
       // crazything.eachSheet(function (worksheet, key) {
       //   worksheet
       //     .commit()
-      //     .then(stuff => console.log('key', key))
+          // .then(stuff => console.log('key', key))
       //     .catch(ex => console.error(key, ex))
       // })
 
+      setTimeout(function () {
+        crazything.commit()
+          .then(() => next())
+          .catch(ex => {
+            console.log('horrible thing', ex)
+          })
+      }, 1000)
     }
 
   ], function (err, sheets) {
@@ -262,13 +390,10 @@ module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, f
     //   workbook.Sheets[sheet] = _sheet
     // })
 
-    let today = moment().format('M-D-YYYY h-mm-ssa')
-    let filename = 'BLEND ' + today + '.xlsx'
-    let filepath = path.join(__dirname, filename)
     // let wopts = { tabSelected: false }
 
     // xlsx.writeFile(workbook, filepath, wopts)
-    finished(null, filepath)
+    finished(null, SAVE_FILEPATH)
 
     // $('#status').html('Report Complete')
     // $('.progress').hide()
@@ -306,148 +431,6 @@ let Workbook = function () {
 
   this.SheetNames = []
   this.Sheets = {}
-}
-
-function parseWorkbook (args, selectedYears, sepTXPOC, sepColor, crazything) {
-
-  console.log('workbook parse', args[1])
-  let wb = readXLSX(...args)
-
-  let sheets = wb.Sheets
-  let sheetNames = wb.SheetNames
-
-  sheetNames.forEach(function (sheetName) {
-    let sheet = sheets[sheetName]
-
-    let headers = getColumnNames(sheet)
-
-    let rows = tojson(sheet, { header: headers, range: 1 })
-
-    rows.forEach(function (row, i) {
-      let ins = row.INS
-      let name = row.NAME
-      if (name) name = name.trim()
-
-      if (name && ins) {
-        let start, end
-        // test dates first, if not within selected years, skip
-        let allDates = [row.DOS, row.BEGIN, row.END].filter(Boolean)
-        let dosDates = getRange(allDates)
-
-        if (dosDates) {
-          start = dosDates[0]
-          end = dosDates[1]
-        }
-
-        if (start) {
-          let rowYear = new Date(start).getFullYear()
-          if (selectedYears.indexOf(rowYear) < 0) return
-        }
-
-        let facility = wb.title
-          .toLowerCase()
-          .replace('claim', '')
-          .replace('cl followup', '')
-          .replace('followup', '')
-          .replace('follow-up', '')
-          .replace('follow up', '')
-          .replace(/\d+/g, '')
-          .trim()
-          .toTitleCase()
-
-        let billed = currencyNumber(row.BILLED) || 0
-        let paid = currencyNumber(row.PAID) || 0
-        let allowed = currencyNumber(row.ALLOWED) || 0
-        let response = currencyNumber(row.PTRESPONS) || 0
-        let bulkamount = currencyNumber(row.BULKAMOUNT) || 0
-        let balance = (billed * 100 - paid * 100) / 100 || 0
-
-        // TODO if loc = MED, MM or FT, GOP
-        let loc
-        if (sheetName.indexOf('POC') > -1) {
-          loc = 'POC'
-        } else {
-          loc = row.LOC
-          if (!loc) {
-            Object.keys(row).forEach(function (key) {
-              if (key.indexOf('LEVEL') > -1) {
-                loc = row[key]
-              }
-            })
-          }
-          if (!loc) loc = ''
-        }
-
-        // TODO should invalid units be '' or 0?
-        let units = parseInt(row.UNITS)
-        if (isNaN(units)) units = ''
-
-        let notes = ''
-        let check = ''
-        Object.keys(row).forEach(function (key) {
-          if (key.indexOf('NOTE') > -1) notes = row[key]
-          if (key.indexOf('CHECK') > -1) check = row[key]
-        })
-
-        let fudate = moment(new Date(row.FUDATE)).format('l')
-        if (fudate === 'Invalid date') fudate = ''
-
-        let invoice = row.INV
-        let sent = moment(new Date(row.SENT)).format('l')
-        let received = moment(new Date(row.RECEIVED)).format('l')
-        let paydate = moment(new Date(row.DATEPAID)).format('l')
-
-        // TODO why are these invalid (missing)?
-        if (sent === 'Invalid date') sent = ''
-        if (received === 'Invalid date') received = ''
-        if (paydate === 'Invalid date') paydate = ''
-
-        // TODO update insurance names?
-        // TODO verify rows with null color have in fact no color!
-        let color = getRowColor(sheet, i + 2)
-
-        let _color
-        if (blue.indexOf(color) > -1) _color = colors.blue
-        else if (red.indexOf(color) > -1) _color = colors.red
-        else if (brown.indexOf(color) > -1) _color = colors.brown
-        else if (magenta.indexOf(color) > -1) _color = colors.magenta
-        else if (green.indexOf(color) > -1) _color = colors.green
-        else if (orange.indexOf(color) > -1) _color = colors.orange
-
-        // TODO add facility to array
-        let _row = ['', invoice, ins, name, paid, billed, allowed, response, start, end, sent, received, paydate, check, bulkamount, notes, fudate, loc, units, balance, facility, _color]
-
-        // if separate by TX/POC, check for POC in loc
-        let add = sepTXPOC ? (loc === 'POC' ? ' POC' : '') : ''
-
-        // if separate by color, else push all to 'Main' sheet
-
-        let label
-        if (!sepColor) {
-          label = 'Main' + add
-        } else {
-          let parsedColor = diffColor(color)
-
-          if (parsedColor === 'FFFFFF' || white.indexOf(color) > -1) {
-            label = 'Open' + add
-          } else if (brown.indexOf(color) > -1) {
-            label = 'Confirmed Paid' + add
-          } else if (parsedColor === '0000FF' || blue.indexOf(color) > -1) {
-            label = 'Payment Member' + add
-          } else if (parsedColor === 'FF0000' || red.indexOf(color) > -1) {
-            label = 'Denied' + add
-          } else if (parsedColor === 'FF00FF' || magenta.indexOf(color) > -1) {
-            label = 'Write Off' + add
-          } else if (parsedColor === '00FF00' || green.indexOf(color) > -1) {
-            label = 'Payment Facility' + add
-          } else if (parsedColor === 'FF9900' || orange.indexOf(color) > -1) {
-            label = 'Orange' + add
-          }
-        }
-        if (label) crazything.getWorksheet(label).addRow(_row).commit()
-      } // end if name + insurance
-    }) // end rows for each
-  })
 }
 
 // create sheet from array
