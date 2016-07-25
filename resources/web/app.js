@@ -20,7 +20,7 @@ app.use(express.static('app'));
 app.use(express.static('node_modules'));
 
 app.use(cookieParser())
-app.use(session({ secret: 'what the what' }))
+// app.use(session({ secret: 'what the what' }))
 app.use(passport.initialize())
 app.use(passport.session())
 
