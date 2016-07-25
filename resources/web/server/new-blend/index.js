@@ -153,7 +153,7 @@ module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, f
     },
 
     function (paths, next) {
-      next(null, paths.map(args => readXLSX(...args)))
+      next(null, paths.map(args => readXLSX.apply(this, args)))
     },
 
     function (workbooks, next) {

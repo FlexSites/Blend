@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node scripts/package.js",
-    "watch": "nodemon --ignore server/new-blend/docs/ app.js"
+    "watch": "NODE_ENV=development nodemon --ignore server/new-blend/docs/ app.js"
   },
   "author": "Tim Collinson",
   "license": "SEE LICENSE IN LICENSE",
@@ -15,6 +15,7 @@
     "async": "^2.0.0-rc.2",
     "bluebird": "^3.4.1",
     "browserify": "^13.0.1",
+    "cookie-parser": "^1.4.3",
     "exceljs": "^0.2.10",
     "express": "^4.14.0",
     "fs-extra": "^0.26.7",
@@ -35,7 +36,6 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "electron-packager": "^6.0.1",
     "jsonfile": "^2.2.3"
   },
   "repository": {

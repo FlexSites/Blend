@@ -1,0 +1,4 @@
+---
+applications:
+- name: blend
+  command: node app.js

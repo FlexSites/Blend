@@ -5,6 +5,7 @@ var path = require('path');
 var url = require('url');
 var mime = require('mime')
 var fs = require('fs')
+var passport = require('./server/authentication')
 
 
 var app = express();
@@ -14,10 +15,23 @@ var blend = require('./server/new-blend');
 
 app.use(express.static('static'));
 app.use(express.static('app'));
-app.use(express.static('node_modules'))
+app.use(express.static('node_modules'));
 
 app.get('/', function (req, res) {
-	res.sendFile(path.join(__dirname + 'static/index.html'));
+	res.sendFile(path.join(__dirname + '/static/index.html'));
+});
+
+app.get('/login', function (req, res) {
+	res.sendFile(path.join(__dirname + '/static/login.html'));
+});
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }));
+
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/' }),
+  function(req, res) {
+    res.redirect('/');
 });
 
 var router = express.Router();
@@ -53,7 +67,6 @@ router.route('/blend')
 		});
 	});
 
-
 app.use('/api', router);
 
 app.use((err, req, res, next) => {
@@ -65,7 +78,7 @@ app.use((err, req, res, next) => {
 
 
 
-app.listen(3000, function () {
-	console.log('Example app listening on port 3000!');
+app.listen(process.env.PORT || 3000, function () {
+	console.log('Blend listening on port 3000!');
 });
 
