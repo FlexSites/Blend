@@ -5,6 +5,8 @@ var path = require('path');
 var url = require('url');
 var mime = require('mime')
 var fs = require('fs')
+var cookieParser = require('cookie-parser')
+var session = require('connect-session')
 var passport = require('./server/authentication')
 
 
@@ -17,9 +19,10 @@ app.use(express.static('static'));
 app.use(express.static('app'));
 app.use(express.static('node_modules'));
 
-app.get('/', function (req, res) {
-	res.sendFile(path.join(__dirname + '/static/index.html'));
-});
+app.use(cookieParser())
+app.use(session({ secret: 'what the what' }))
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.get('/login', function (req, res) {
 	res.sendFile(path.join(__dirname + '/static/login.html'));
