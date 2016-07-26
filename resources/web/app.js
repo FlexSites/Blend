@@ -15,11 +15,19 @@ var app = express();
 var facilities = require('./server/facilities');
 var blend = require('./server/new-blend');
 
-app.use(express.static('static'));
-app.use(express.static('app'));
+function isAuthenticated(req, res, next) {
+	console.log('isAuthenticated', req.isAuthenticated())
+	if (!req.isAuthenticated()) return res.redirect('/login')
+	else if (req.url === '/login') return res.redirect('/')
+	next()
+}
+
+
 app.use(express.static('node_modules'));
 
 app.use(passport())
+app.get('/', isAuthenticated)
+app.use(express.static('static'));
 
 var router = express.Router();
 
@@ -51,10 +59,10 @@ router.route('/blend')
 			// console.log('sending stream', filename, mimetype, blendFile)
 			// var filestream = fs.createReadStream(blendFile)
 			// filestream.pipe(res)
-		});
-	});
+		})
+	})
 
-app.use('/api', router);
+app.use('/api', isAuthenticated, router)
 
 app.use((err, req, res, next) => {
 	console.log(err)

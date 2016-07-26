@@ -48,7 +48,7 @@ module.exports = () => {
     passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }))
 
   router.get('/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: '/' }),
+    passport.authenticate('google', { failureRedirect: '/login' }),
     function (req, res) {
       res.redirect('/')
     })
