@@ -46,7 +46,7 @@ let EXCLUDESHEETS = ['fax', 'copy', 'appeal', 'laira', 'checks', 'responses', 'i
 // make sure docs folder extists and is empty
 // fs.emptyDirSync(path.join(__dirname, 'docs'))
 
-module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, finished) {
+module.exports = function (accessToken, selectedOptions, selectedYears, sepTXPOC, sepColor, finished) {
   async.waterfall([
     function (next) {
       // /////////////////////////////////////////////////
@@ -109,7 +109,7 @@ module.exports = function (selectedOptions, selectedYears, sepTXPOC, sepColor, f
                   request.get({
                     url: url,
                     encoding: null,
-                    'qs': { 'access_token': jwt.credentials.access_token },
+                    'qs': { 'access_token': accessToken },
                     forever: true,
                     gzip: true
                   }, (err, res) => {
