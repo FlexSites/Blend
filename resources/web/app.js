@@ -1,10 +1,12 @@
 "use strict";
+
 var express = require('express');
 var open = require("open");
 var path = require('path');
 var url = require('url');
 var mime = require('mime')
 var fs = require('fs')
+var Drive = require('./server/drive-client')
 // var cookieParser = require('cookie-parser')
 // var session = require('connect-session')
 var passport = require('./server/authentication')
@@ -16,7 +18,6 @@ var facilities = require('./server/facilities');
 var blend = require('./server/new-blend');
 
 function isAuthenticated(req, res, next) {
-	console.log('isAuthenticated', req.isAuthenticated())
 	if (!req.isAuthenticated()) return res.redirect('/login')
 	else if (req.url === '/login') return res.redirect('/')
 	next()
@@ -46,11 +47,12 @@ router.route('/facilities')
 
 router.route('/blend')
 	.get(function(req, res, next) {
+
 		var url_parts = url.parse(req.url, true);
-		blend(JSON.parse(url_parts.query.options), JSON.parse(url_parts.query.years), url_parts.query.txpoc, url_parts.query.color, function(err, blendFile){
+		blend(new Drive(req.user.accessToken), JSON.parse(url_parts.query.options), JSON.parse(url_parts.query.years), url_parts.query.txpoc, url_parts.query.color, function(err, blendFile){
 			if (err) return next(err);
 			res.download(blendFile, 'blend-file.xlsx', (err) => {
-				console.log('sendfile worked', err, blendFile)
+				console.info('sendfile worked', err, blendFile)
 			})
 			// var filename = path.basename(blendFile)
 			// var mimetype = mime.lookup(filename)
@@ -65,7 +67,7 @@ router.route('/blend')
 app.use('/api', isAuthenticated, router)
 
 app.use((err, req, res, next) => {
-	console.log(err)
+	console.error(err)
 	res.send(err)
 })
 
@@ -74,6 +76,6 @@ app.use((err, req, res, next) => {
 
 
 app.listen(process.env.PORT || 3000, function () {
-	console.log('Blend listening on port 3000!');
+	console.info('Blend listening on port 3000!');
 });
 

@@ -12,30 +12,17 @@ String.prototype.toTitleCase = function () {
 // const BrowserWindow = remote.require('browser-window')
 // const BrowserWindow = require('electron').remote
 
-let google = require('googleapis')
-const drive = google.drive('v2')
-const JWT = google.auth.JWT
-const request = require('request')
 const path = require('path')
 const Bluebird = require('bluebird')
 const Excel = require('exceljs')
-
-const SERVICE_ACCOUNT_EMAIL = '780463185858-924al4jpqutjbvcbq6bp1lk91t4gmt34@developer.gserviceaccount.com'
-const CLIENT_ID = '780463185858-924al4jpqutjbvcbq6bp1lk91t4gmt34.apps.googleusercontent.com'
-const SERVICE_ACCOUNT_KEY_FILE = path.resolve(__dirname, '..', 'elevated-numbers.pem')
-const SCOPE = ['https://www.googleapis.com/auth/drive']
-
-let jwt = new JWT(
-  SERVICE_ACCOUNT_EMAIL,
-  SERVICE_ACCOUNT_KEY_FILE,
-  null,
-  SCOPE)
+const URL = require('url')
 
 const SAVE_FILEPATH = path.join(__dirname, 'streamed-workbook.xlsx')
 
 const fs = require('fs-extra')
+const superagent = require('superagent')
+const request = require('request-promise')
 const xlsx = require('xlsx-style')
-const XLSXStream = require('xlsx-stream')
 const moment = require('moment')
 const tojson = xlsx.utils.sheet_to_json
 const async = require('async')
@@ -46,7 +33,8 @@ let EXCLUDESHEETS = ['fax', 'copy', 'appeal', 'laira', 'checks', 'responses', 'i
 // make sure docs folder extists and is empty
 // fs.emptyDirSync(path.join(__dirname, 'docs'))
 
-module.exports = function (accessToken, selectedOptions, selectedYears, sepTXPOC, sepColor, finished) {
+module.exports = function (drive, selectedOptions, selectedYears, sepTXPOC, sepColor, finished) {
+  console.log(drive);
   async.waterfall([
     function (next) {
       // /////////////////////////////////////////////////
@@ -57,7 +45,7 @@ module.exports = function (accessToken, selectedOptions, selectedYears, sepTXPOC
       Bluebird.reduce(
         selectedOptions,
         (all, option) =>
-          getReq("mimeType = 'application/vnd.google-apps.spreadsheet'", option)
+          drive.list("mimeType = 'application/vnd.google-apps.spreadsheet'", option)
             .then(json => {
               if (json && json.items) {
                 return all.concat(json.items)
@@ -74,93 +62,46 @@ module.exports = function (accessToken, selectedOptions, selectedYears, sepTXPOC
       // ////////////////////////
       // download excel files //
       // ////////////////////////
-      let progress = 0
-      let excel = []
 
-      async.each(files, function (file, done) {
-        console.log('async series')
-        let count = 0
-        let max = 6
+      return Bluebird.mapSeries(files, file => {
+          console.log('attempt', file.id)
+          return drive.head(file.id)
+            .then((res) => {
+              let title = res.title
+              let url = res.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+              if (url && filterByArray(title, EXCLUDEWORKBOOKS)) {
+                let pathname = path.join(__dirname, 'docs', title + '.xlsx')
+                console.log('downloading', url, 'to', pathname)
+                // return drive.get(file.id, pathname)
 
-        async.whilst(
-          function () {
-            if (progress === files.length) {
-              count = max
-            }
+                const mystream = fs.createWriteStream(pathname)
+                const query = URL.parse(url).query
+                superagent
+                  .get(url)
+                  .set('Authorization', `Bearer ${drive.accessToken}`)
+                  .pipe(mystream)
 
-            return count < max
-          },
-          function (attempt) {
-            count++
-            console.log('attempt', file.id)
-            drive.files.get({
-              auth: jwt,
-              fileId: file.id,
-              forever: true,
-              gzip: true
-            }, function (err, res) {
-              if (err) {
-                console.log(err)
-                attempt()
-              } else {
-                let title = res.title
-                let url = res.exportLinks['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
-                if (url && filterByArray(title, EXCLUDEWORKBOOKS)) {
-                  request.get({
-                    url: url,
-                    encoding: null,
-                    'qs': { 'access_token': accessToken },
-                    forever: true,
-                    gzip: true
-                  }, (err, res) => {
-                    if (count > 1) console.log('retry #%d: %s', count, title)
-                    progress++
-                    let pathname = path.join(__dirname, 'docs', title + '.xlsx')
-
-                    fs.writeFileSync(pathname, res.body)
-
-                    try {
-                      excel.push([pathname, title, selectedYears])
-                      count = max
-                    } catch (e) {
-                      console.log('error parsing excel')
-                    }
-
-                    attempt()
-                  })
-                } else {
-                  progress++
-
-                  count = max
-                  attempt()
-                }
+                console.log('RETURN', [pathname, title, selectedYears])
+                return Bluebird.fromCallback(cb => mystream.on('finish', cb))
+                  .return([pathname, title, selectedYears])
               }
+              return false
             })
-          },
-          (err) => {
-            if (progress === files.length) {
-              // view.resetProgress()
-              // view.updateProgress(1)
-              // $('#status').html('Parsing Excel files&hellip;')
+        })
+        .asCallback(next)
 
-              next(null, excel)
-            }
-
-            done()
-          }
-        ) // end whilst
-      }) // end each
     },
 
     function (paths, next) {
-      next(null, paths.map(args => readXLSX.apply(this, args)))
+      console.log('RECEIVED PATHS', paths)
+      next(null, paths.filter(path => !!path).map(args => readXLSX.apply(this, args)))
     },
 
     function (workbooks, next) {
       // /////////////////////////
       // parse excel workbooks //
       // /////////////////////////
-
+      console.log('sending', workbooks.length)
       let _sheets
 
       if (sepTXPOC && sepColor) { // separate by TX/POC and row color
@@ -541,6 +482,7 @@ let getRange = function (dates) {
 }
 
 function readXLSX (url, title, selectedYears) {
+  console.log('reading file!!!', title)
   let wb = xlsx.readFile(url, { cellStyles: true })
   if (wb) {
     wb.title = title
@@ -646,7 +588,7 @@ let filterByArray = function (name, array) {
 
 let getReq = function (query, option) {
   return Bluebird.fromCallback(cb => drive.children.list({
-    auth: jwt,
+    auth: option.auth,
     q: query,
     folderId: option.id,
     forever: true,

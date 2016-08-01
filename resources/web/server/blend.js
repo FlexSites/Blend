@@ -1,7 +1,7 @@
 const google = require('googleapis')
 const drive = google.drive('v2')
 const JWT = google.auth.JWT
-const request = require('request')
+const request = require('request-promise')
 const path = require('path')
 const Bluebird = require('bluebird')
 

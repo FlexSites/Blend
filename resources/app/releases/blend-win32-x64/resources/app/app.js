@@ -15,7 +15,7 @@ var BrowserWindow = require('electron').remote
 var google = require('googleapis'),
     drive = google.drive('v2'),
     JWT = google.auth.JWT,
-    request = require('request'),
+    request = require('request-promise'),
     path = require('path');
 
 var SERVICE_ACCOUNT_EMAIL = '780463185858-924al4jpqutjbvcbq6bp1lk91t4gmt34@developer.gserviceaccount.com',

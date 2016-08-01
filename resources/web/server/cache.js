@@ -1,7 +1,7 @@
 var google = require('googleapis'),
     drive = google.drive('v2'),
     JWT = google.auth.JWT,
-    request = require('request'),
+    request = require('request-promise'),
     path = require('path'),
     get = require('object-path').get;
 

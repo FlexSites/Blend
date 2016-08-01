@@ -14,20 +14,17 @@ module.exports = () => {
       callbackURL: config.get('google.callback')
     },
     function (accessToken, refreshToken, profile, cb) {
-      console.log('got a user', Object.assign({ accessToken, refreshToken }, profile))
       return cb(null, Object.assign({ accessToken, refreshToken }, profile))
     })
   )
 
-  let router = Router()
+  var router = Router()
 
   passport.serializeUser(function (user, done) {
-    console.log('serialize', user)
     done(null, user)
   })
 
   passport.deserializeUser(function (user, done) {
-    console.log('deserialize', user)
     done(null, user)
   })
 
@@ -36,16 +33,19 @@ module.exports = () => {
   router.use(passport.initialize())
   router.use(passport.session())
   router.use((req, res, next) => {
-    console.log('after login', req.user)
     next()
   })
   router.get('/user', (req, res) => {
-    console.log('called user', req.user)
     res.send(req.user)
   })
 
   router.get('/auth/google',
-    passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }))
+    passport.authenticate('google', {
+      scope: [
+        'https://www.googleapis.com/auth/plus.login',
+        'https://www.googleapis.com/auth/drive'
+      ]
+  }))
 
   router.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),

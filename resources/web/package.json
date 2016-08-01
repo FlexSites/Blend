@@ -14,7 +14,9 @@
     "aes": "^0.1.0",
     "async": "^2.0.0-rc.2",
     "bluebird": "^3.4.1",
+    "bluebird-retry": "^0.8.0",
     "browserify": "^13.0.1",
+    "config": "^1.21.0",
     "connect-session": "0.0.1",
     "cookie-parser": "^1.4.3",
     "exceljs": "^0.2.10",
@@ -29,7 +31,8 @@
     "open": "0.0.5",
     "passport": "^0.3.2",
     "passport-google-oauth20": "^1.0.0",
-    "request": "^2.69.0",
+    "request-promise": "^4.1.0",
+    "superagent": "^2.1.0",
     "uuid": "^2.0.2",
     "xlsx-stream": "^0.1.2",
     "xlsx-style": "^0.8.7"
@@ -38,7 +41,8 @@
     "doc": "docs"
   },
   "devDependencies": {
-    "jsonfile": "^2.2.3"
+    "jsonfile": "^2.2.3",
+    "nodemon": "^1.10.0"
   },
   "repository": {
     "type": "git",
