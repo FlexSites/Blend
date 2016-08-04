@@ -14,6 +14,9 @@ var passport = require('./server/authentication')
 
 var app = express();
 
+app.set('view engine', 'pug');
+app.set('views', __dirname + '/static');
+
 var facilities = require('./server/facilities');
 var blend = require('./server/new-blend');
 
@@ -23,11 +26,21 @@ function isAuthenticated(req, res, next) {
 	next()
 }
 
+app.get('/login', (req, res, next) => {
+	res.render('login.pug', {
+
+	})
+})
+
 
 app.use(express.static('node_modules'));
 
 app.use(passport())
-app.get('/', isAuthenticated)
+app.get('/', 
+	isAuthenticated, 
+	(req, res) => res.render('index', { user: req.user.emails[0].value })
+);
+
 app.use(express.static('static'));
 
 var router = express.Router();
@@ -68,7 +81,9 @@ app.use('/api', isAuthenticated, router)
 
 app.use((err, req, res, next) => {
 	console.error(err)
-	res.send(err)
+	res.render('login.pug', {
+		errorMessage: err.message,
+	})
 })
 
 

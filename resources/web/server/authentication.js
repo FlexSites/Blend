@@ -14,6 +14,10 @@ module.exports = () => {
       callbackURL: config.get('google.callback')
     },
     function (accessToken, refreshToken, profile, cb) {
+      console.log('profile', profile);
+      if(profile._json.domain !== "elevatedbilling.com"){
+        return cb(new Error("Invalid host domain"));
+      }
       return cb(null, Object.assign({ accessToken, refreshToken }, profile))
     })
   )
@@ -43,7 +47,9 @@ module.exports = () => {
     passport.authenticate('google', {
       scope: [
         'https://www.googleapis.com/auth/plus.login',
-        'https://www.googleapis.com/auth/drive'
+        'https://www.googleapis.com/auth/drive',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email'
       ]
   }))
 
@@ -51,7 +57,7 @@ module.exports = () => {
     passport.authenticate('google', { failureRedirect: '/login' }),
     function (req, res) {
       res.redirect('/')
-    })
+    }); 
 
   return router
 }

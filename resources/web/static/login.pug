@@ -6,11 +6,15 @@
     <link rel="stylesheet" href="/css/bootstrap-multiselect.css" type="text/css"/>
     <link rel="stylesheet" type="text/css" href="/css/base.css">
     <script data-main="js/main" src="/js/require.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="664085978254-aald2dggmc4joc8ato26vgg7em4959rk.apps.googleusercontent.com">
 </head>
 <body>
 
-<a href="/auth/google">Sign In with Google</a>
+span= errorMessage
+<a href="/auth/google">Sign In </a>
 
+<div class="g-signin2" data-onsuccess="onSignIn"><a href="/auth/google">Sign In </a></div>
 
 
 </body>

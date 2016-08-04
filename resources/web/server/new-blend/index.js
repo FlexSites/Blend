@@ -16,6 +16,7 @@ const path = require('path')
 const Bluebird = require('bluebird')
 const Excel = require('exceljs')
 const URL = require('url')
+const glob = require('glob')
 
 const SAVE_FILEPATH = path.join(__dirname, 'streamed-workbook.xlsx')
 
@@ -58,7 +59,7 @@ module.exports = function (drive, selectedOptions, selectedYears, sepTXPOC, sepC
     },
 
     function (files, next) {
-      console.log('download excel files', files.length)
+      // console.log('download excel files', files.length)
       // ////////////////////////
       // download excel files //
       // ////////////////////////
@@ -89,19 +90,19 @@ module.exports = function (drive, selectedOptions, selectedYears, sepTXPOC, sepC
             })
         })
         .asCallback(next)
-
+      // next(null, glob.sync(__dirname + '/docs/**.xlsx')
+      //   .map(pathname => {
+      //     console.log('pathname', pathname)
+      //     return [pathname, path.basename(pathname, '.xlsx'), selectedYears]
+      //   })
+      // )
     },
 
     function (paths, next) {
-      console.log('RECEIVED PATHS', paths)
-      next(null, paths.filter(path => !!path).map(args => readXLSX.apply(this, args)))
-    },
-
-    function (workbooks, next) {
       // /////////////////////////
       // parse excel workbooks //
       // /////////////////////////
-      console.log('sending', workbooks.length)
+
       let _sheets
 
       if (sepTXPOC && sepColor) { // separate by TX/POC and row color
@@ -147,7 +148,12 @@ module.exports = function (drive, selectedOptions, selectedYears, sepTXPOC, sepC
         _sheets = [ 'Main' ]
       }
 
+      const workbooks = paths
+        .filter(path => !!path)
+
       if (!workbooks.length) next('No workbooks found')
+
+
 
       var options = {
         filename: SAVE_FILEPATH
@@ -155,13 +161,14 @@ module.exports = function (drive, selectedOptions, selectedYears, sepTXPOC, sepC
       var crazything = new Excel.stream.xlsx.WorkbookWriter(options)
       _sheets = _sheets.map((name) => crazything.addWorksheet(name))
 
-      workbooks.forEach(function (wb) {
+      return Bluebird.mapSeries(workbooks, (args) => {
+        const wb = readXLSX.apply(this, args)
         let sheets = wb.Sheets
         let sheetNames = wb.SheetNames
 
         console.log('workbook parse')
 
-        sheetNames.forEach(function (sheetName) {
+        return Bluebird.mapSeries(sheetNames, (sheetName) => {
           let sheet = sheets[sheetName]
 
           let headers = getColumnNames(sheet)
@@ -170,7 +177,7 @@ module.exports = function (drive, selectedOptions, selectedYears, sepTXPOC, sepC
 
           console.log('sheetname', sheetName)
 
-          rows.forEach(function (row, i) {
+          return Bluebird.mapSeries(rows, (row, i) => {
             let ins = row.INS
             let name = row.NAME
             if (name) name = name.trim()
@@ -270,42 +277,40 @@ module.exports = function (drive, selectedOptions, selectedYears, sepTXPOC, sepC
               // if separate by color, else push all to 'Main' sheet
               if (sepColor) {
                 if (white.indexOf(color) > -1) {
-                  crazything.getWorksheet('Open' + add).addRow(_row).commit()
+                  return crazything.getWorksheet('Open' + add).addRow(_row).commit()
                 } else if (blue.indexOf(color) > -1) {
-                  crazything.getWorksheet('Payment Member' + add).addRow(_row).commit()
+                  return crazything.getWorksheet('Payment Member' + add).addRow(_row).commit()
                 } else if (red.indexOf(color) > -1) {
-                  crazything.getWorksheet('Denied' + add).addRow(_row).commit()
+                  return crazything.getWorksheet('Denied' + add).addRow(_row).commit()
                 } else if (brown.indexOf(color) > -1) {
-                  crazything.getWorksheet('Confirmed Paid' + add).addRow(_row).commit()
+                  return crazything.getWorksheet('Confirmed Paid' + add).addRow(_row).commit()
                 } else if (magenta.indexOf(color) > -1) {
-                  crazything.getWorksheet('Write Off' + add).addRow(_row).commit()
+                  return crazything.getWorksheet('Write Off' + add).addRow(_row).commit()
                 } else if (green.indexOf(color) > -1) {
-                  crazything.getWorksheet('Payment Facility' + add).addRow(_row).commit()
+                  return crazything.getWorksheet('Payment Facility' + add).addRow(_row).commit()
                 } else if (orange.indexOf(color) > -1) {
-                  crazything.getWorksheet('Orange' + add).addRow(_row).commit()
+                  return crazything.getWorksheet('Orange' + add).addRow(_row).commit()
                 }
               } else {
-                crazything.getWorksheet('Main' + add).addRow(_row).commit()
+                return crazything.getWorksheet('Main' + add).addRow(_row).commit()
               }
             } // end if name + insurance
           }) // end rows for each
         }) // end sheet for each
       }) // end workbooks for each
-
+      .then(() => crazything.commit())
+      .asCallback(next)
+      .catch(ex => {
+        console.log('horrible thing', ex)
+      })
       // crazything.eachSheet(function (worksheet, key) {
       //   worksheet
       //     .commit()
-          // .then(stuff => console.log('key', key))
+      //     .then(stuff => console.log('key', key))
       //     .catch(ex => console.error(key, ex))
       // })
 
-      setTimeout(function () {
-        crazything.commit()
-          .then(() => next())
-          .catch(ex => {
-            console.log('horrible thing', ex)
-          })
-      }, 1000)
+        
     }
 
   ], function (err, sheets) {
