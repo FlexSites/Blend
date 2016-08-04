@@ -23,96 +23,23 @@ var fs = require('fs-extra'),
     async = require('async'),
     glob = require('glob');
 
+var Drive = require('./google-client')
+
 var EXCLUDEWORKBOOKS = ['laira', 'blank', 'request', 'alpine recovery lodge', 'olympus drug and alcohol', 'renaissance outpatient bountiful', 'renaissance ranch- orem', 'renaissance ranch- ut outpatient', ' old'];
 var EXCLUDESHEETS = ['fax', 'copy', 'appeal', 'laira', 'checks', 'responses', 'ineligible'];
 
 var selectedYears = []
 
-module.exports.getFacilities = function(callback) {
-	var facilities = [];
-	async.waterfall([
-	    function (next) {
-	        ////////////////////////////////
-	        // google drive authorization //
-	        ////////////////////////////////
-	        jwt.authorize(function (err, tokens) {
-	            if (err) next(err)
-
-	            jwt.credentials = tokens
-	          	console.log('authorize', err, tokens);
-	            next(null);
-	        })
-	    },
-
-	    function (next) {
-	        ////////////////////////////////
-	        // get list of client folders //
-	        ////////////////////////////////
-	        var req = drive.files.list({
-	            auth: jwt,
-	            folderId: '0B_kSXk5v54QYeFRucElOQWlpdG8',
-	            q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
-	            orderBy: 'title',
-	            forever: true,
-	            gzip: true,
-	            timeout: 1,
-	            maxResults: 1000
-	        }, function (err, response, body) {
-	            if (err) console.log(err)
-	            	console.log('drive');
-	        })
-
-
-	        req.on('response', function (res) {
-	            var avgChunks = 250;
-	            var numChunks = 0;
-	            var data = ""
-
-	            res.on('data', function (chunk) {
-	                data += chunk
-	                numChunks += 1
-	                var percent = parseInt(numChunks * 100 / avgChunks)
-
-	                // window.setTimeout(function () {
-	                //     view.updateProgress(percent)
-	                // }, 0)
-	            })
-
-	            res.on('end', function () {
-	            	console.log('ending stream');
-	                var json = JSON.parse(data)
-	                if (json && json.items) {
-
-	                    // window.setTimeout(function () {
-	                    //     view.updateProgress(100)
-	                    // }, 0)
-
-	                    var files = json.items
-
-	                    next(null,files);
-
-	                    // setTimeout(function () {
-	                    //     next(null, files)
-	                    // }, 777)
-	                }
-	            })
-	        })
-	    },
-
-	    function (files, next) {
-        // filter out certain workbooks
-        files = files
-        	.filter((file) => {
-        		return !~EXCLUDEWORKBOOKS.indexOf(file) && get(file, 'parents.0.id') === '0B_kSXk5v54QYeFRucElOQWlpdG8';
-        	})
-			.map((file) => ({
-				value: file.id,
-				text: file.title,
-			}));
-
-			next(null, files);
-	    }
-
-	], callback)
+module.exports = function(req, res, next) {
+	const client = req.user.googleClient
+    client.list()
+    	.tap(files => console.log('got files?', files.length))
+		.then(files => files
+        	.filter((file) => !~EXCLUDEWORKBOOKS.indexOf(file.name.toLowerCase()))
+			.map((file) => ({ value: file.id, text: file.name }))
+		)
+		.then(facilities => ({ facilities }))
+		.then(res.json.bind(res))
+		.catch(next)
 }
 

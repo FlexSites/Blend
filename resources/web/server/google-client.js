@@ -1,7 +1,8 @@
 'use strict'
 
 const google = require('googleapis')
-const drive = google.drive('v2')
+const drive = google.drive('v3')
+const sheets = google.sheets('v4')
 const config = require('config')
 const OAuth2 = google.auth.OAuth2
 const assert = require('assert')
@@ -13,6 +14,7 @@ const fs = require('fs')
 const CLIENT_ID = config.get('google.key')
 const CLIENT_SECRET = config.get('google.secret')
 const CLIENT_CALLBACK = config.get('google.callback')
+const FOLDER_ID = config.get('google.drive.folderId')
 
 module.exports = class Drive {
 	constructor(access_token) {
@@ -31,39 +33,20 @@ module.exports = class Drive {
         }, cb))
 	}
 
-	get(fileId, pathname) {
-		return drive.files.export({
+	get(spreadsheetId, pathname) {
+		return Bluebird.fromCallback(cb => sheets.spreadsheets.get({
 			auth: this.client,
-			fileId,
-			mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-		})
-		.on('end', function() {
-		  console.log('Done');
-		  cb()
-		})
-		.on('error', function(err) {
-		  console.log('Error during download', err);
-		})
-		.pipe(fs.createWriteStream(pathname));
+			spreadsheetId,
+		}, cb))
 	}
 
-	get_old(id) {
-		var uri = `https://www.googleapis.com/drive/v2/files/${id}?alt=media`
-        return request.get({
-          uri,
-          headers: {
-        	Authorization: `Bearer ${this.accessToken}`
-          },
-        })
-	}
-
-	list(query, option) {
-	  return Bluebird.fromCallback(cb => drive.children.list({
+	list() {
+	  return Bluebird.fromCallback(cb => drive.files.list({
 	    auth: this.client,
-	    q: query,
-	    folderId: option.id,
-	    forever: true,
-	    gzip: true
+	    pageSize: 1000,
+	    q: `'${FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+     	orderBy: 'name',
 	  }, cb))
+	  .then(res => res.files)
 	}
 }

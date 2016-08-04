@@ -4,6 +4,7 @@ const config = require('config')
 const Router = require('express').Router
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
+const Drive = require('./google-client')
 
 
 module.exports = () => {
@@ -18,7 +19,8 @@ module.exports = () => {
       if(profile._json.domain !== "elevatedbilling.com"){
         return cb(new Error("Invalid host domain"));
       }
-      return cb(null, Object.assign({ accessToken, refreshToken }, profile))
+      const googleClient = new Drive(accessToken)
+      return cb(null, Object.assign({ googleClient, accessToken, refreshToken }, profile))
     })
   )
 
@@ -29,6 +31,7 @@ module.exports = () => {
   })
 
   passport.deserializeUser(function (user, done) {
+    user.googleClient = new Drive(user.accessToken)
     done(null, user)
   })
 
